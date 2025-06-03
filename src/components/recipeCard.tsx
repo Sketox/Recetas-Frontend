@@ -18,7 +18,7 @@ const RecipeCard = ({
   rating,
 }: Props) => {
   return (
-    <div className="bg-white rounded-lg shadow hover:shadow-md transition">
+    <div className="bg-white rounded-lg shadow-xl hover:shadow-md transition">
       <div className="relative w-full h-40">
         <Image
           src={imageUrl}
