@@ -4,13 +4,13 @@ export interface Recipe {
   description: string;
   ingredients: string[];
   instructions: string[];
-  prepTime: number; // in minutes
-  cookTime: number; // in minutes
+  prepTime: number;
+  cookTime: number;
   servings: number;
   difficulty: "Fácil" | "Intermedio" | "Difícil";
   category: "Desayuno" | "Almuerzo" | "Cena" | "Postre" | "Snack";
   imageUrl: string;
-  rating: number; // 1-5
-  createdAt: Date;
-  updatedAt: Date;
+  rating: number;
+  createdAt: string;
+  updatedAt: string;
 }
