@@ -1,8 +1,13 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Navbar from "../components/navbar";
 import Hero from "../components/hero";
 import RecipeCard from "../components/recipeCard";
 import CategoryCard from "../components/category";
 import CTA from "../components/CTA";
+import { fetchRecipesFromAI } from "../lib/api";
 
 const mockRecipes = [
   {
@@ -23,7 +28,6 @@ const mockRecipes = [
     difficulty: "Fácil",
     rating: 4.7,
   },
-  // Agrega más recetas si deseas
 ];
 
 const categories = [
@@ -35,6 +39,24 @@ const categories = [
 ];
 
 export default function HomePage() {
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [input, setInput] = useState("");
+  const [recipes, setRecipes] = useState<any[]>([]);
+  const router = useRouter();
+
+  const handleSend = async () => {
+    if (input.trim() === "") return;
+    const res = await fetchRecipesFromAI(input);
+    setRecipes(res);
+    setInput("");
+  };
+
+  const handleViewRecipe = (index: number) => {
+    const recipe = recipes[index];
+    localStorage.setItem("selectedRecipe", JSON.stringify(recipe));
+    router.push("/recipe_detail");
+  };
+
   return (
     <div>
       <Navbar />
@@ -66,6 +88,56 @@ export default function HomePage() {
       <div className="max-w-3xl mx-auto px-4 pb-16">
         <CTA />
       </div>
+
+      {/* Botón flotante del chat */}
+      <button
+        className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-blue-600 text-white text-2xl shadow-lg hover:bg-blue-700 z-50"
+        onClick={() => setIsChatOpen(!isChatOpen)}
+      >
+        💬
+      </button>
+
+      {/* Chat flotante */}
+      {isChatOpen && (
+        <div className="fixed bottom-24 right-6 w-[360px] max-h-[500px] bg-white border border-gray-300 shadow-lg rounded-lg p-4 overflow-y-auto z-50">
+          <div className="flex justify-between items-center mb-2">
+            <h3 className="text-lg font-semibold">Asistente de Recetas</h3>
+            <button
+              onClick={() => setIsChatOpen(false)}
+              className="text-gray-600 hover:text-black"
+            >
+              ✖
+            </button>
+          </div>
+
+          <div className="mb-2">
+            <input
+              className="w-full border px-2 py-1 rounded mb-2"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="¿Qué quieres cocinar?"
+            />
+            <button
+              className="w-full bg-blue-600 text-white py-1 rounded hover:bg-blue-700"
+              onClick={handleSend}
+            >
+              Enviar
+            </button>
+          </div>
+
+          {recipes.map((r, i) => (
+            <div key={i} className="mb-4">
+              <h4 className="font-semibold">{r.title}</h4>
+              <button
+                className="text-sm text-blue-600 hover:underline"
+                onClick={() => handleViewRecipe(i)}
+              >
+                Ver receta →
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
