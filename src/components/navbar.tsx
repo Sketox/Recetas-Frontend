@@ -1,31 +1,18 @@
-"use client";
-import Link from "next/link";
+'use client'
 
-const Navbar = () => {
+import Link from 'next/link'
+
+export default function Navbar() {
   return (
-    <nav className="bg-white shadow-sm border-b">
-      <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-        <Link href="/">
-          <span className="text-xl font-bold text-blue-600">
-            🍴 Recetas App
-          </span>
-        </Link>
-        <div className="flex items-center gap-6">
-          <Link href="/">
-            <span className="text-gray-600 hover:text-blue-600">Inicio</span>
-          </Link>
-          <Link href="/recetas">
-            <span className="text-gray-600 hover:text-blue-600">
-              Todas las Recetas
-            </span>
-          </Link>
-          <button className="px-4 py-2 bg-blue-100 text-blue-700 rounded hover:bg-blue-200">
-            Iniciar Sesión
-          </button>
-        </div>
+    <nav className="flex justify-between items-center p-4 border-b bg-white">
+      <div className="flex items-center gap-2">
+        <span className="text-2xl font-bold text-orange-500">🍳ooksy</span>
+        <Link href="/recipes" className="text-gray-700 hover:text-orange-500">Ver Recetas</Link>
+      </div>
+      <div className="flex items-center gap-4">
+        <input type="text" placeholder="Buscar recetas..." className="border rounded px-2 py-1" />
+        <button className="border px-4 py-1 rounded bg-white hover:bg-gray-100">Iniciar Sesión</button>
       </div>
     </nav>
   );
-};
-
-export default Navbar;
+}
