@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Navbar from "../components/navbar";
+import Navbar from "@/components/navbar";
 import Hero from "../components/hero";
 import RecipeCard from "../components/recipeCard";
 import CategoryCard from "../components/category";
