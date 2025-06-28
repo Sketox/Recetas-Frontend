@@ -1,0 +1,111 @@
+.container {
+  font-family: sans-serif;
+  padding: 0;
+  margin: 0;
+}
+
+.header {
+  background-color: #4a4a4a;
+  color: white;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.mainTitle {
+  font-size: 36px;
+  margin-bottom: 10px;
+}
+
+.header p {
+  font-size: 14px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.contentSection {
+  padding: 40px 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.sectionTitle {
+  font-size: 32px;
+  margin-bottom: 20px;
+}
+
+.gridContainer {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 30px;
+}
+
+.gridItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.imagePlaceholder {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  background-color: #ddd;
+  border: 2px solid #aaa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.imagePlaceholder::before {
+  content: "X";
+  font-size: 48px;
+  color: #aaa;
+}
+
+.textPlaceholder {
+  margin-top: 15px;
+  font-size: 14px;
+  color: #333;
+  max-width: 300px;
+}
+
+.gallerySection {
+  padding: 40px 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.gallerySection h2 {
+  font-size: 28px;
+  margin-bottom: 10px;
+}
+
+.gallerySection p {
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 30px;
+}
+
+.galleryRow {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.galleryItem {
+  width: 80px;
+  aspect-ratio: 1 / 1;
+  background-color: #ddd;
+  border: 2px solid #aaa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.galleryItem::before {
+  content: "X";
+  font-size: 24px;
+  color: #aaa;
+}
