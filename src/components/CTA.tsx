@@ -10,7 +10,7 @@ const CTA = () => {
         Comparte tus creaciones culinarias con nuestra comunidad. Sube tus
         recetas favoritas y ayuda a otros a descubrir nuevos sabores.
       </p>
-      <Link href="/crear">
+      <Link href="/create_recipe">
         <button className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">
           + Crear Nueva Receta
         </button>

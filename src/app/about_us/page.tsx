@@ -1,78 +1,80 @@
+//Aún falta el backend
+'use client';
+
 import React from 'react';
 import Navbar from '../../components/navbar';
-import styles from './style.module.css';
+import { FaTwitter, FaLinkedin } from 'react-icons/fa';
 
 const AboutUsPage = () => {
+  const team = Array(6).fill({
+    name: 'Whitney Francis',
+    pronouns: '(He/Him)',
+    role: 'Copywriter',
+  });
+
   return (
     <>
-      <Navbar /> {/* Incluye el Navbar aquí */}
-      <div className={styles.container}>
-        {/* Sección superior con título */}
-        <header className={styles.header}>
-          <h1 className={styles.mainTitle}>Sobre Nosotros</h1>
-        </header>
+      <Navbar />
 
-        {/* Sección principal de contenido con grilla */}
-        <section className={styles.contentSection}>
-          <h2 className={styles.sectionTitle}>Sobre Nosotros</h2>
-          <div className={styles.gridContainer}>
-            {/* Bloque 1 */}
-            <div className={styles.gridItem}>
-              <div className={styles.imagePlaceholder}></div>
-              <p className={styles.textPlaceholder}>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do
-                eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut
-                enim ad minim veniam.
-              </p>
-            </div>
-            {/* Bloque 2 */}
-            <div className={styles.gridItem}>
-              <div className={styles.imagePlaceholder}></div>
-              <p className={styles.textPlaceholder}>
-                Duis aute irure dolor in reprehenderit in voluptate velit esse
-                cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat
-                cupidatat non proident.
-              </p>
-            </div>
-            {/* Bloque 3 */}
-            <div className={styles.gridItem}>
-              <div className={styles.imagePlaceholder}></div>
-              <p className={styles.textPlaceholder}>
-                Sunt in culpa qui officia deserunt mollit anim id est laborum.
-                Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut
-                odit aut fugit.
-              </p>
-            </div>
-            {/* Bloque 4 */}
-            <div className={styles.gridItem}>
-              <div className={styles.imagePlaceholder}></div>
-              <p className={styles.textPlaceholder}>
-                Neque porro quisquam est, qui dolorem ipsum quia dolor sit amet,
-                consectetur, adipisci velit, sed quia non numquam eius modi
-                tempora incidunt.
-              </p>
-            </div>
-            {/* Bloque 5 */}
-            <div className={styles.gridItem}>
-              <div className={styles.imagePlaceholder}></div>
-              <p className={styles.textPlaceholder}>
-                Ut enim ad minima veniam, quis nostrum exercitationem ullam
-                corporis suscipit laboriosam, nisi ut aliquid ex ea commodi
-                consequatur.
-              </p>
-            </div>
-            {/* Bloque 6 */}
-            <div className={styles.gridItem}>
-              <div className={styles.imagePlaceholder}></div>
-              <p className={styles.textPlaceholder}>
-                Quis autem vel eum iure reprehenderit qui in ea voluptate velit
-                esse quam nihil molestiae consequatur, vel illum qui dolorem
-                eum.
-              </p>
-            </div>
+      <main className="bg-white text-center">
+        {/* Hero */}
+        <section className="bg-[#FF8C42] text-white py-12 px-4">
+          <h1 className="text-4xl font-bold mb-4">Sobre Nosotros</h1>
+          <p className="max-w-2xl mx-auto text-base font-medium">
+            We're a dynamic group of individuals who are passionate about what we do and dedicated to delivering the best results for our clients.
+          </p>
+        </section>
+
+        {/* Team Grid */}
+        <section className="py-16 bg-gray-50 px-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-12 max-w-6xl mx-auto">
+            {team.map((member, index) => (
+              <div key={index} className="flex flex-col items-center">
+                {/* Avatar */}
+                <div className="w-32 h-32 bg-[#3A2F2F] rounded-full flex items-center justify-center mb-4">
+                  <span className="text-white text-4xl">👤</span>
+                </div>
+                {/* Nombre */}
+                <h3 className="font-bold text-lg text-gray-900">{member.name}</h3>
+                <p className="text-sm text-gray-600">{member.pronouns}</p>
+                <p className="text-sm text-gray-700 mt-1">{member.role}</p>
+                {/* Redes sociales */}
+                <div className="flex gap-4 mt-3 text-gray-400">
+                  <FaTwitter className="w-5 h-5" />
+                  <FaLinkedin className="w-5 h-5" />
+                </div>
+              </div>
+            ))}
           </div>
         </section>
-      </div>
+
+        {/* Footer */}
+        <footer className="bg-white border-t pt-10 pb-16 px-6">
+          <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
+            <div>
+              <h4 className="text-sm font-bold text-gray-900 mb-2">Mapa del sitio</h4>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>Todas las recetas</li>
+                <li>Comparte tus ingredientes</li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="text-sm font-bold text-gray-900 mb-2">Categoría de Recetas</h4>
+              <ul className="text-sm text-gray-600 space-y-1">
+                <li>Desayunos</li>
+                <li>Platos fuertes</li>
+                <li>Postres</li>
+              </ul>
+            </div>
+            <div className="flex items-center justify-start md:justify-end">
+              <div className="flex flex-col items-end">
+                <img src="/logo-cooksy.svg" alt="Cooksy Logo" className="w-20 mb-2" />
+                <span className="text-sm font-semibold text-gray-800">cooksy</span>
+              </div>
+            </div>
+          </div>
+        </footer>
+      </main>
     </>
   );
 };
