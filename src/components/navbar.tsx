@@ -1,17 +1,47 @@
-'use client'
-
-import Link from 'next/link'
+import Image from 'next/image';
+import Link from 'next/link';
+import { FaSearch } from 'react-icons/fa'; // Importamos el icono
 
 export default function Navbar() {
   return (
-    <nav className="flex justify-between items-center p-4 border-b bg-white">
+    <nav className="flex justify-between items-center shadow-4xl border-b border-gray-100 p-4 bg-white">
       <div className="flex items-center gap-2">
-        <span className="text-2xl font-bold text-orange-500">🍳ooksy</span>
-        <Link href="/recipes" className="text-gray-700 hover:text-orange-500">Ver Recetas</Link>
+        <Link href="/">
+          <Image
+            src="/cooksy.svg"
+            alt="Cooksy Logo"
+            width={100}
+            height={100}
+            className="mr-2"
+          />
+        </Link>
+        <Link
+          href="/recipes"
+          className="ml-6 text-gray-700 hover:text-orange-500 transition-transform duration-300 hover:scale-110"
+        >
+          Ver Recetas
+        </Link>
       </div>
+
       <div className="flex items-center gap-4">
-        <input type="text" placeholder="Buscar recetas..." className="border rounded px-2 py-1" />
-        <button className="border px-4 py-1 rounded bg-white hover:bg-gray-100">Iniciar Sesión</button>
+        {/* Barra de búsqueda */}
+        <div className="flex items-center rounded-full px-4 border border-gray-300 w-100 bg-white">
+          <FaSearch className="text-gray-500 ml-2" />
+          <input
+            type="text"
+            placeholder="Buscar recetas..."
+            className="bg-transparent outline-none px-3 py-2 text-gray-700 w-full"
+          />
+        </div>
+
+        {/* Botones de registro e inicio de sesión */}
+        <button className="flex items-center gap-2 px-5 py-2 bg-orange-400 text-white rounded hover:bg-orange-600 transition-transform duration-300 hover:scale-110 cursor-pointer">
+          Regístrate
+        </button>
+
+        <button className="border px-4 py-2 rounded bg-white hover:bg-gray-100 font-bold transition-transform duration-300 hover:scale-110 cursor-pointer">
+          Iniciar Sesión
+        </button>
       </div>
     </nav>
   );

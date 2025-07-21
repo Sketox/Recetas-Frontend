@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/navbar";
 import Hero from "../components/hero";
+import Footer from "../components/Footer";
+import EditorCarousel from "../components/Carousel";
 import RecipeCard from "../components/recipeCard";
 import CategoryCard from "../components/category";
 import CTA from "../components/CTA";
@@ -60,7 +62,12 @@ export default function HomePage() {
   return (
     <div>
       <Navbar />
+      <div className="mt-10"></div> 
       <Hero />
+      <div className="max-w-7xl mx-auto px-4 mt-14">
+        <h2 className="text-2xl font-semibold mb-4">Selección del Editor</h2>
+      </div>
+      <EditorCarousel />
 
       <section className="max-w-7xl mx-auto px-4 py-10">
         <div className="flex justify-between items-center mb-6">
@@ -138,6 +145,7 @@ export default function HomePage() {
           ))}
         </div>
       )}
+      <Footer />
     </div>
   );
 }

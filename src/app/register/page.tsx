@@ -1,6 +1,11 @@
 import RegisterForm from "@/components/Form";
+import Navbar from "@/components/navbar";
 
 export default function RegistroPage() {
-  return <RegisterForm />;
+  return (
+    <>
+      <Navbar />
+      <RegisterForm />
+    </>
+  );
 }
-

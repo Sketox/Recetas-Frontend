@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Navbar from '../../components/navbar';
+import Footer from '../../components/Footer';
 import { FaTwitter, FaLinkedin } from 'react-icons/fa';
 
 const AboutUsPage = () => {
@@ -64,31 +65,8 @@ const AboutUsPage = () => {
           </div>
         </section>
 
-        <footer className="bg-white border-t pt-10 pb-16 px-6">
-          <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 text-left">
-            <div>
-              <h4 className="text-sm font-bold text-gray-900 mb-2">Mapa del sitio</h4>
-              <ul className="text-sm text-gray-600 space-y-1">
-                <li>Todas las recetas</li>
-                <li>Comparte tus ingredientes</li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="text-sm font-bold text-gray-900 mb-2">Categoría de Recetas</h4>
-              <ul className="text-sm text-gray-600 space-y-1">
-                <li>Desayunos</li>
-                <li>Platos fuertes</li>
-                <li>Postres</li>
-              </ul>
-            </div>
-            <div className="flex items-center justify-start md:justify-end">
-              <div className="flex flex-col items-end">
-                <span className="text-sm font-semibold text-gray-800">🍳ooksy</span>
-              </div>
-            </div>
-          </div>
-        </footer>
       </main>
+      <Footer />
     </>
   );
 };
