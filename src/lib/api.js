@@ -12,20 +12,28 @@ export async function fetchRecipesFromAI(message) {
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
 // Obtener todas las recetas
-export async function getRecipes() {
-  const res = await fetch(`${API_URL}/recipes`, {
-    method: "GET",
-    headers: {
-      "Content-Type": "application/json",
-    },
-  });
+export const getRecipes = async () => {
+  try {
+    const token = localStorage.getItem("authToken"); // donde guardaste el token
+    const response = await fetch("http://localhost:5000/api/recipes", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-  if (!res.ok) {
-    throw new Error("Error al obtener recetas");
+    if (!response.ok) {
+      throw new Error("Error al obtener recetas");
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error("Error en getRecipes:", error);
+    return [];
   }
+};
 
-  return res.json();
-}
 
 // Crear una receta nueva
 export async function createRecipe(recipe) {

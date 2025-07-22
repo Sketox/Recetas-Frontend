@@ -1,8 +1,13 @@
-import Image from 'next/image';
-import Link from 'next/link';
-import { FaSearch } from 'react-icons/fa'; // Importamos el icono
+"use client";
+
+import Image from "next/image";
+import Link from "next/link";
+import { FaSearch } from "react-icons/fa";
+import { usePathname } from "next/navigation";
 
 export default function Navbar() {
+  const pathname = usePathname(); // ✅ Ruta actual
+
   return (
     <nav className="flex justify-between items-center shadow-4xl border-b border-gray-100 p-4 bg-white">
       <div className="flex items-center gap-2">
@@ -34,18 +39,23 @@ export default function Navbar() {
           />
         </div>
 
-        {/* Botones de registro e inicio de sesión */}
-      <Link href="/register">
-        <button className="flex items-center gap-2 px-5 py-2 bg-orange-400 text-white rounded hover:bg-orange-600 transition-transform duration-300 hover:scale-110 cursor-pointer">
-          Regístrate
-        </button>
-      </Link>
+        {/* Ocultar "Regístrate" si estamos en /register */}
+        {pathname !== "/register" && (
+          <Link href="/register">
+            <button className="flex items-center gap-2 px-5 py-2 bg-orange-400 text-white rounded hover:bg-orange-600 transition-transform duration-300 hover:scale-110 cursor-pointer">
+              Regístrate
+            </button>
+          </Link>
+        )}
 
-      <Link href="/login">
-        <button className="border px-4 py-2 rounded bg-white hover:bg-gray-100 font-bold transition-transform duration-300 hover:scale-110 cursor-pointer">
-          Iniciar Sesión
-        </button>
-      </Link>
+        {/* Ocultar "Iniciar Sesión" si estamos en /login */}
+        {pathname !== "/login" && (
+          <Link href="/login">
+            <button className="border px-4 py-2 rounded bg-white hover:bg-gray-100 font-bold transition-transform duration-300 hover:scale-110 cursor-pointer">
+              Iniciar Sesión
+            </button>
+          </Link>
+        )}
       </div>
     </nav>
   );
