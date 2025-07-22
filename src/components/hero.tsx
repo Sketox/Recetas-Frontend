@@ -30,12 +30,12 @@ const Hero = () => {
 
         {/* Botones */}
         <div className="flex flex-wrap gap-3 justify-center">
-          <button className="flex items-center gap-2 px-5 py-2 bg-orange-400 text-white shadow-md font-semibold rounded hover:bg-orange-600 transition-transform duration-300 hover:scale-110 cursor-pointer">
+          <button className="flex items-center gap-3 px-6 py-3 bg-orange-400 text-white shadow-lg font-semibold rounded hover:bg-orange-600 transition-transform duration-300 hover:scale-110 cursor-pointer">
             <FaUtensils />
             Explora recetas
           </button>
           <Link href="/about_us">
-          <button className="flex items-center gap-2 px-5 py-2 bg-orange-400 text-white shadow-md font-semibold rounded hover:bg-orange-600 transition-transform duration-300 hover:scale-110 cursor-pointer">
+          <button className="flex items-center gap-3 px-6 py-3 bg-orange-400 text-white shadow-lg font-semibold rounded hover:bg-orange-600 transition-transform duration-300 hover:scale-110 cursor-pointer">
             <FaUsers />
             Sobre nosotros
           </button>

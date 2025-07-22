@@ -10,7 +10,7 @@ interface CardProps {
 
 const Card = ({ title, description, imageUrl }: CardProps) => {
   return (
-    <div className="bg-white rounded-lg shadow-xl overflow-hidden">
+    <div className="bg-white rounded-lg shadow-2xl overflow-hidden">
       <div className="relative h-48 w-full">
         <Image src={imageUrl} alt={title} layout="fill" objectFit="cover" />
       </div>

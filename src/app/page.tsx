@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "@/components/navbar";
 import Hero from "../components/hero";
@@ -9,28 +9,7 @@ import EditorCarousel from "../components/Carousel";
 import RecipeCard from "../components/recipeCard";
 import CategoryCard from "../components/category";
 import CTA from "../components/CTA";
-import { fetchRecipesFromAI } from "../lib/api";
-
-const mockRecipes = [
-  {
-    title: "Paella Valenciana",
-    description:
-      "El plato más internacional de la cocina española, originario de Valencia.",
-    imageUrl: "/images/paella.jpg",
-    time: 55,
-    difficulty: "Media",
-    rating: 4.9,
-  },
-  {
-    title: "Croquetas de Jamón",
-    description:
-      "Tapa española por excelencia, cremosas por dentro y crujientes por fuera.",
-    imageUrl: "/images/croquetas.jpg",
-    time: 50,
-    difficulty: "Fácil",
-    rating: 4.7,
-  },
-];
+import { fetchRecipesFromAI, getRecipes } from "../lib/api";
 
 const categories = [
   { icon: "🥐", name: "Desayuno", count: 1 },
@@ -44,7 +23,23 @@ export default function HomePage() {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [input, setInput] = useState("");
   const [recipes, setRecipes] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
   const router = useRouter();
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const data = await getRecipes();
+        setRecipes(data);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const handleSend = async () => {
     if (input.trim() === "") return;
@@ -62,25 +57,27 @@ export default function HomePage() {
   return (
     <div>
       <Navbar />
-      <div className="mt-10"></div> 
+      <div className="mt-10"></div>
       <Hero />
-      <div className="max-w-7xl mx-auto px-4 mt-14">
+      <div className="max-w-7xl mx-auto px-4 mt-12">
         <h2 className="text-2xl font-semibold mb-4">Selección del Editor</h2>
       </div>
       <EditorCarousel />
 
+      {/* Recetas Destacadas dinámicas */}
       <section className="max-w-7xl mx-auto px-4 py-10">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-semibold">Recetas Destacadas</h2>
-          <a href="#" className="text-blue-600 text-sm hover:underline">
-            Ver todas →
-          </a>
-        </div>
-        <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-          {mockRecipes.map((r, i) => (
-            <RecipeCard key={i} {...r} />
-          ))}
-        </div>
+        <h2 className="text-2xl font-semibold mb-6">Recetas Destacadas</h2>
+        {loading ? (
+          <p>Cargando...</p>
+        ) : recipes.length > 0 ? (
+          <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            {recipes.slice(0, 4).map((r, i) => (
+              <RecipeCard key={i} {...r} />
+            ))}
+          </div>
+        ) : (
+          <p>No hay recetas disponibles</p>
+        )}
       </section>
 
       <section className="max-w-7xl mx-auto px-4 py-10">
@@ -91,10 +88,7 @@ export default function HomePage() {
           ))}
         </div>
       </section>
-
-      <div className="max-w-3xl mx-auto px-4 pb-16">
         <CTA />
-      </div>
 
       {/* Botón flotante del chat */}
       <button

@@ -35,13 +35,17 @@ export default function Navbar() {
         </div>
 
         {/* Botones de registro e inicio de sesión */}
+      <Link href="/register">
         <button className="flex items-center gap-2 px-5 py-2 bg-orange-400 text-white rounded hover:bg-orange-600 transition-transform duration-300 hover:scale-110 cursor-pointer">
           Regístrate
         </button>
+      </Link>
 
+      <Link href="/login">
         <button className="border px-4 py-2 rounded bg-white hover:bg-gray-100 font-bold transition-transform duration-300 hover:scale-110 cursor-pointer">
           Iniciar Sesión
         </button>
+      </Link>
       </div>
     </nav>
   );
