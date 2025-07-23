@@ -2,14 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Navbar from "@/components/navbar";
 import Hero from "../components/hero";
-import Footer from "../components/Footer";
 import EditorCarousel from "../components/Carousel";
 import RecipeCard from "../components/recipeCard";
 import CategoryCard from "../components/category";
 import CTA from "../components/CTA";
 import { fetchRecipesFromAI, getRecipes } from "../lib/api";
+import Modal from '../components/modal';
+import CreateRecipeForm from '../components/create_recipe_form';
 
 const categories = [
   { icon: "🥐", name: "Desayuno", count: 1 },
@@ -25,6 +25,17 @@ export default function HomePage() {
   const [recipes, setRecipes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showAlert, setShowAlert] = useState(false);
+  const handleCloseModal = () => setIsModalOpen(false);
+
+  const handleRecipeUploaded = () => {
+    setShowAlert(true);
+    setIsModalOpen(false); // Cierra el modal
+
+    setTimeout(() => setShowAlert(false), 3000); // Oculta la alerta
+  };
+
 
   useEffect(() => {
     const fetchData = async () => {
@@ -56,9 +67,27 @@ export default function HomePage() {
 
   return (
     <div>
-      <Navbar />
       <div className="mt-10"></div>
       <Hero />
+      
+      {/* Inicio Botón de crear receta */}
+      
+      {showAlert && (
+        <div className="bg-green-100 text-green-800 p-2 rounded mb-4 text-center font-semibold">
+          ✅ Receta cargada exitosamente
+        </div>
+      )}
+
+      <div className="text-center my-6">
+        
+        <button onClick={() => setIsModalOpen(true)}
+          className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded shadow-md transition duration-300"
+        >
+          ➕ Crear nueva receta
+        </button>
+      </div>
+      {/* Fin Botón de crear receta */}
+
       <div className="max-w-7xl mx-auto px-4 mt-12">
         <h2 className="text-2xl font-semibold mb-4">Selección del Editor</h2>
       </div>
@@ -97,6 +126,7 @@ export default function HomePage() {
       >
         💬
       </button>
+
 
       {/* Chat flotante */}
       {isChatOpen && (
@@ -139,7 +169,13 @@ export default function HomePage() {
           ))}
         </div>
       )}
-      <Footer />
+      {/* Función del botón de crear receta */}
+
+      <Modal isOpen={isModalOpen} onClose={handleCloseModal}>
+        <CreateRecipeForm onRecipeUploaded={handleRecipeUploaded} />
+      </Modal>
+
     </div>
+
   );
 }

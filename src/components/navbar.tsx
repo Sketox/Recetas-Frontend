@@ -9,7 +9,7 @@ export default function Navbar() {
   const pathname = usePathname(); // ✅ Ruta actual
 
   return (
-    <nav className="flex justify-between items-center shadow-4xl border-b border-gray-100 p-4 bg-white">
+    <nav className="flex justify-between items-center shadow-4xl border-b border-gray-100 p-4 sticky top-0 z-50 shadow-md bg-white">
       <div className="flex items-center gap-2">
         <Link href="/">
           <Image

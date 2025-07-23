@@ -1,8 +1,6 @@
 'use client';
 
 import React from 'react';
-import Navbar from '../../components/navbar';
-import Footer from '../../components/Footer';
 import { FaTwitter, FaLinkedin } from 'react-icons/fa';
 
 const AboutUsPage = () => {
@@ -51,8 +49,6 @@ const AboutUsPage = () => {
 
   return (
     <>
-      <Navbar />
-
       <main className="bg-white text-center">
         <section className="bg-[#FF8C42] text-white py-12 px-4">
           <h1 className="text-4xl font-bold mb-4">Sobre Nosotros</h1>
@@ -104,7 +100,6 @@ const AboutUsPage = () => {
         </section>
 
       </main>
-      <Footer />
     </>
   );
 };

@@ -1,13 +1,14 @@
-'use client';
 
+'use client';
 import React, { useState } from 'react';
 
-export default function CreateRecipePage() {
+export default function createRecipeForm({ onRecipeUploaded  }) {
   const [selectedImage, setSelectedImage] = useState(null);
   const [ingredients, setIngredients] = useState([]);
   const [newIngredient, setNewIngredient] = useState('');
   const [instructions, setInstructions] = useState([]);
   const [newInstruction, setNewInstruction] = useState('');
+  const [showAlert, setShowAlert] = useState(false);
 
   const handleImageChange = (event) => {
     if (event.target.files && event.target.files[0]) {
@@ -47,8 +48,29 @@ export default function CreateRecipePage() {
     setInstructions(updatedInstructions);
   };
 
+ 
+  const handleSubmitRecipe = () => {
+    // 🔗 Aquí puedes conectar con el backend más adelante
+
+    if (onRecipeUploaded) {
+      onRecipeUploaded(); // Muestra alerta y cierra modal desde el componente principal
+    }
+  };
+
+
+
+  const truncateInstruction = (text) => {
+    return text.length > 60 ? text.slice(0, 40) + '...' : text;
+  };
+
   return (
     <>
+      {showAlert && (
+        <div className="bg-green-100 text-green-800 p-2 rounded mb-4 text-center font-semibold">
+          ✅ Receta cargada exitosamente
+
+        </div>
+      )}
 
       <main className="max-w-[1200px] mx-auto mt-8 px-5">
         <div className="grid gap-8 md:grid-cols-2">
@@ -118,79 +140,89 @@ export default function CreateRecipePage() {
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
+                    <div className="bg-white rounded-lg shadow p-6">
             <h2 className="text-xl font-bold mb-4 text-gray-800">Ingredientes</h2>
-            {ingredients.map((ingredient, index) => (
-              <div key={index} className="flex items-center gap-2 mb-2">
-                <input type="checkbox" className="w-5 h-5 cursor-pointer" />
-                <span className="flex-1 text-gray-700">{ingredient}</span>
-                <button
-                  onClick={() => handleRemoveIngredient(index)}
-                  className="ml-2 text-red-500 hover:text-red-700 font-bold text-sm"
+
+            <div className="flex flex-wrap items-center gap-2 border border-gray-300 rounded p-2 min-h-[56px]">
+              {ingredients.map((ingredient, index) => (
+                <span
+                  key={index}
+                  className="bg-[#FF8C42] text-white px-3 py-1 rounded-full text-sm flex items-center gap-2"
                 >
-                  Eliminar
-                </button>
-              </div>
-            ))}
-            <div className="flex items-center gap-2 mt-4">
+                  {ingredient}
+                  <button
+                    onClick={() => handleRemoveIngredient(index)}
+                    className="text-white hover:text-gray-200 font-bold"
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
               <input
                 type="text"
-                placeholder="Ingresar nuevo ingrediente..."
-                className="w-full p-2 border border-gray-300 rounded text-base outline-none focus:border-[#FF8C42] transition-colors"
+                placeholder="Añadir ingrediente..."
+                className="flex-1 min-w-[120px] p-1 outline-none text-sm"
                 value={newIngredient}
                 onChange={(e) => setNewIngredient(e.target.value)}
-                onKeyPress={(e) => {
+                onKeyDown={(e) => {
                   if (e.key === 'Enter') {
+                    e.preventDefault();
                     handleAddIngredient();
                   }
                 }}
               />
-              <button
-                onClick={handleAddIngredient}
-                className="bg-[#FF8C42] text-white py-2 px-3 rounded font-bold cursor-pointer inline-flex items-center justify-center gap-2 text-sm hover:bg-orange-600 transition-colors"
-              >
-                +
-              </button>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-bold mb-4 text-gray-800">Instrucciones</h2>
-            {instructions.map((instruction, index) => (
-              <div key={index} className="flex items-start gap-2 mb-2">
-                <span className="text-lg font-bold text-gray-600 min-w-[25px] text-right pt-2">{index + 1}.</span>
-                <span className="flex-1 text-gray-700 pt-2">{instruction}</span>
-                <button
-                  onClick={() => handleRemoveInstruction(index)}
-                  className="ml-2 text-red-500 hover:text-red-700 font-bold self-start text-sm"
-                >
-                  Eliminar
-                </button>
-              </div>
-            ))}
-            <div className="flex items-center gap-2 mt-4">
-              <textarea
-                placeholder="Escribir nueva instrucción..."
-                className="w-full p-2 border border-gray-300 rounded text-base resize-vertical min-h-[50px] outline-none focus:border-[#FF8C42] transition-colors"
-                value={newInstruction}
-                onChange={(e) => setNewInstruction(e.target.value)}
-              ></textarea>
-              <button
-                onClick={handleAddInstruction}
-                className="bg-[#FF8C42] text-white py-2 px-3 rounded font-bold cursor-pointer inline-flex items-center justify-center gap-2 text-sm hover:bg-orange-600 transition-colors self-end"
-              >
-                +
-              </button>
-            </div>
-          </div>
-        </div>
 
-        <div className="flex justify-center mt-8">
-          <button className="bg-[#FF8C42] text-white py-3 px-8 rounded font-bold cursor-pointer inline-flex items-center justify-center gap-2 hover:bg-orange-600 transition-colors text-lg shadow">
-            Subir receta
+                <div className="bg-white rounded-lg shadow p-6">
+        <h2 className="text-xl font-bold mb-4 text-gray-800">Instrucciones</h2>
+        {instructions.map((instruction, index) => (
+          <div key={index} className="flex items-start gap-2 mb-2">
+            <span className="text-lg font-bold text-gray-600 min-w-[25px] text-right pt-2">
+              {index + 1}.
+            </span>
+            <span className="flex-1 text-gray-700 pt-2 line-clamp-1 break-words">
+              {instruction}
+            </span>
+            <button
+              onClick={() => handleRemoveInstruction(index)}
+              className="ml-2 text-red-500 hover:text-red-700 font-bold self-start text-sm"
+            >
+              Eliminar
+            </button>
+          </div>
+        ))}
+        <div className="flex items-center gap-2 mt-4">
+          <textarea
+            placeholder="Escribir nueva instrucción..."
+            className="w-full p-2 border border-gray-300 rounded text-base resize-vertical min-h-[50px] outline-none focus:border-[#FF8C42] transition-colors"
+            value={newInstruction}
+            onChange={(e) => setNewInstruction(e.target.value)}
+          ></textarea>
+          <button
+            onClick={handleAddInstruction}
+            className="bg-[#FF8C42] text-white py-2 px-3 rounded font-bold cursor-pointer inline-flex items-center justify-center gap-2 text-sm hover:bg-orange-600 transition-colors self-end"
+          >
+            +
           </button>
         </div>
+      </div>
+      </div>
+
+
+        
+      <div className="text-center mt-6">
+            
+          <button
+                  onClick={handleSubmitRecipe}
+                  className="mt-4 bg-[#FF8C42] text-white px-4 py-2 rounded hover:bg-[#e67c36] transition"
+                >
+                  Subir receta
+              </button>
+        </div>
       </main>
+      
     </>
   );
 }
