@@ -1,23 +1,30 @@
-import { ReactNode } from "react";
+import React from "react";
 
 interface CategoryProps {
-  icon: ReactNode; // Para usar íconos dinámicos
+  icon: string;
   name: string;
   count: number;
-  active?: boolean; // Si la categoría está seleccionada
+  onClick?: () => void;
+  isActive?: boolean;
 }
 
-const CategoryCard = ({ icon, name, count, active = false }: CategoryProps) => {
+const CategoryCard = ({ icon, name, count, onClick, isActive }: CategoryProps) => {
   return (
     <div
-      className={`flex flex-col items-center justify-center px-6 py-6 rounded-xl cursor-pointer 
-        transition-all duration-300 transform
-        ${active ? "bg-orange-400 text-white" : "bg-white hover:bg-orange-100 hover:scale-105"}
+      onClick={onClick}
+      className={`flex flex-col items-center justify-center p-4 rounded-lg cursor-pointer transition 
+        ${
+          isActive
+            ? "bg-orange-300 text-white"
+            : "bg-white text-gray-700 hover:bg-orange-100"
+        }
       `}
     >
-      <div className="text-4xl mb-2">{icon}</div>
-      <h4 className={`font-bold text-lg ${active ? "text-white" : "text-gray-700"}`}>{name}</h4>
-      <p className={`text-sm ${active ? "text-white" : "text-gray-500"}`}>{count} recetas</p>
+      <span className="text-3xl mb-2">{icon}</span>
+      <h3 className="text-base font-semibold">{name}</h3>
+      <p className={`text-sm ${isActive ? "text-white" : "text-gray-500"}`}>
+        {count} recetas
+      </p>
     </div>
   );
 };

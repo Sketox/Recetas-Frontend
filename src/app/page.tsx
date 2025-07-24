@@ -21,13 +21,15 @@ const categories = [
 
 export default function HomePage() {
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [input, setInput] = useState("");
   const [recipes, setRecipes] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
   const handleCloseModal = () => setIsModalOpen(false);
+  const router = useRouter(); 
+  
 
   const handleRecipeUploaded = () => {
     setShowAlert(true);
@@ -69,24 +71,6 @@ export default function HomePage() {
     <div>
       <div className="mt-10"></div>
       <Hero />
-      
-      {/* Inicio Botón de crear receta */}
-      
-      {showAlert && (
-        <div className="bg-green-100 text-green-800 p-2 rounded mb-4 text-center font-semibold">
-          ✅ Receta cargada exitosamente
-        </div>
-      )}
-
-      <div className="text-center my-6">
-        
-        <button onClick={() => setIsModalOpen(true)}
-          className="bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2 px-4 rounded shadow-md transition duration-300"
-        >
-          ➕ Crear nueva receta
-        </button>
-      </div>
-      {/* Fin Botón de crear receta */}
 
       <div className="max-w-7xl mx-auto px-4 mt-12">
         <h2 className="text-2xl font-semibold mb-4">Selección del Editor</h2>
@@ -101,7 +85,14 @@ export default function HomePage() {
         ) : recipes.length > 0 ? (
           <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
             {recipes.slice(0, 4).map((r, i) => (
-              <RecipeCard key={i} {...r} />
+              <RecipeCard
+                title={r.title}
+                description={r.description}
+                imageUrl={r.imageUrl}
+                time={(r.prepTime || 0) + (r.cookTime || 0)}
+                difficulty={r.difficulty}
+                rating={r.rating}
+              />
             ))}
           </div>
         ) : (
@@ -113,11 +104,21 @@ export default function HomePage() {
         <h2 className="text-2xl font-semibold mb-6">Categorías</h2>
         <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
           {categories.map((c, i) => (
-            <CategoryCard key={i} {...c} />
+            <CategoryCard
+              key={i}
+              {...c}
+              isActive={selectedCategory === c.name}
+              onClick={() => {
+                setSelectedCategory(c.name); 
+                router.push(`/recipes?category=${encodeURIComponent(c.name)}`);
+              }}
+            />
           ))}
         </div>
       </section>
-        <CTA />
+
+
+        <CTA onOpenModal={() => setIsModalOpen(true)} />
 
       {/* Botón flotante del chat */}
       <button

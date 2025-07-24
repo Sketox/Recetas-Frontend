@@ -1,38 +1,128 @@
+"use client";
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import { Recipe } from "../../types/recipe";
+import RecipeCard from "@/components/recipeCard";
 
-async function getRecipes(): Promise<Recipe[]> {
-  const res = await fetch("http://localhost:5000/api/recipes", {
-    cache: "no-store",
-  });
+export default function RecipesPage() {
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [filteredRecipes, setFilteredRecipes] = useState<Recipe[]>([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("");
+  const [selectedDifficulty, setSelectedDifficulty] = useState("");
 
-  if (!res.ok) {
-    throw new Error("Failed to fetch recipes");
-  }
+  const searchParams = useSearchParams();
 
-  return res.json();
-}
+  // ✅ Detectar categoría desde la URL
+  useEffect(() => {
+    const categoryFromUrl = searchParams.get("category");
+    if (categoryFromUrl) {
+      setSelectedCategory(categoryFromUrl);
+    }
+  }, [searchParams]);
 
-export default async function RecipesPage() {
-  const recipes = await getRecipes();
+  // ✅ Fetch de recetas
+  useEffect(() => {
+    const fetchRecipes = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/api/recipes", {
+          cache: "no-store",
+        });
+        const data = await res.json();
+        setRecipes(data);
+        setFilteredRecipes(data);
+      } catch (error) {
+        console.error("Error fetching recipes:", error);
+      }
+    };
+
+    fetchRecipes();
+  }, []);
+
+  // ✅ Lógica de filtrado
+  useEffect(() => {
+    let filtered = recipes;
+
+    if (searchTerm) {
+      filtered = filtered.filter((recipe) =>
+        recipe.title.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    if (selectedCategory && selectedCategory !== "Filtrar por categoría") {
+      filtered = filtered.filter(
+        (recipe) =>
+          recipe.category?.toLowerCase() === selectedCategory.toLowerCase()
+      );
+    }
+
+    if (selectedDifficulty && selectedDifficulty !== "Filtrar por dificultad") {
+      filtered = filtered.filter(
+        (recipe) =>
+          recipe.difficulty?.toLowerCase() === selectedDifficulty.toLowerCase()
+      );
+    }
+
+    setFilteredRecipes(filtered);
+  }, [searchTerm, selectedCategory, selectedDifficulty, recipes]);
 
   return (
-    <main className="p-6">
-      <h1 className="text-2xl font-bold mb-4">All Recipes</h1>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-        {recipes.map((recipe) => (
-          <div key={recipe.id} className="border rounded-xl p-4 shadow">
-            <img
-              src={recipe.imageUrl}
-              alt={recipe.title}
-              className="w-full h-40 object-cover rounded-md mb-2"
+    <main className="max-w-7xl mx-auto px-4 py-8">
+      <h1 className="text-3xl font-bold mb-6">Todas las Recetas</h1>
+
+      {/* Barra de búsqueda y filtros */}
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4 mb-6">
+        <input
+          type="text"
+          placeholder="Buscar recetas..."
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="border border-gray-300 rounded-lg px-4 py-2 w-full sm:w-1/3"
+        />
+        <select
+          value={selectedCategory}
+          onChange={(e) => setSelectedCategory(e.target.value)}
+          className="border border-gray-300 rounded-lg px-4 py-2 w-full sm:w-1/4"
+        >
+          <option>Filtrar por categoría</option>
+          <option value="Desayuno">Desayuno</option>
+          <option value="Almuerzo">Almuerzo</option>
+          <option value="Cena">Cena</option>
+          <option value="Postre">Postre</option>
+          <option value="Snack">Snack</option>
+        </select>
+        <select
+          value={selectedDifficulty}
+          onChange={(e) => setSelectedDifficulty(e.target.value)}
+          className="border border-gray-300 rounded-lg px-4 py-2 w-full sm:w-1/4"
+        >
+          <option>Filtrar por dificultad</option>
+          <option value="Fácil">Fácil</option>
+          <option value="Media">Intermedio</option>
+          <option value="Difícil">Difícil</option>
+        </select>
+      </div>
+
+      <p className="text-gray-600 mb-4">
+        Mostrando {filteredRecipes.length} de {recipes.length} recetas
+      </p>
+
+      <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+        {filteredRecipes.length > 0 ? (
+          filteredRecipes.map((recipe) => (
+            <RecipeCard
+              key={recipe.id}
+              title={recipe.title}
+              description={recipe.description}
+              imageUrl={recipe.imageUrl}
+              time={(recipe.prepTime || 0) + (recipe.cookTime || 0)} 
+              difficulty={recipe.difficulty || "Fácil"}
+              rating={recipe.rating || 4.5}
             />
-            <h2 className="text-xl font-semibold">{recipe.title}</h2>
-            <p className="text-sm text-gray-500">
-              {recipe.category} | ⭐ {recipe.rating}
-            </p>
-            <p className="text-sm mt-2 line-clamp-3">{recipe.description}</p>
-          </div>
-        ))}
+          ))
+        ) : (
+          <p>No hay recetas disponibles</p>
+        )}
       </div>
     </main>
   );
