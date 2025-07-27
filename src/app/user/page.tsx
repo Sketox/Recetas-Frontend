@@ -8,8 +8,6 @@ import { FaUserCircle, FaEdit } from 'react-icons/fa';
 export default function ProfilePage() {
   const [userProfile, setUserProfile] = useState({
     name: 'Ignatius Keller',
-    pronouns: '(He/Him)',
-    location: 'Sausalito, California, United States',
     avatar: null,
   });
 
@@ -55,8 +53,6 @@ export default function ProfilePage() {
 
         <section className="pt-20 sm:pt-24 pb-8 text-center bg-white shadow-md mx-auto max-w-4xl rounded-lg mt-8 px-4">
           <h1 className="text-3xl font-bold text-gray-900">{userProfile.name}</h1>
-          <p className="text-gray-600 text-sm mt-1">{userProfile.pronouns}</p>
-          <p className="text-gray-700 text-md mt-2">{userProfile.location}</p>
           <button className="mt-6 bg-[#FF8C42] text-white py-2 px-6 rounded-full font-semibold hover:bg-orange-600 transition-colors shadow-md">
             Editar perfil
           </button>
