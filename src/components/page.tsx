@@ -1,9 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import Navbar from '../../components/navbar';
 
-export default function CreateRecipePage() {
+export default function CreateRecipeModal({ onClose }: { onClose: () => void }) {
   const [selectedImage, setSelectedImage] = useState(null);
   const [ingredients, setIngredients] = useState([]);
   const [newIngredient, setNewIngredient] = useState('');
@@ -49,15 +48,26 @@ export default function CreateRecipePage() {
   };
 
   return (
-    <>
-      <Navbar />
+    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center">
+      <div className="relative bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto p-6">
+        {/* Botón cerrar */}
+        <button
+          onClick={onClose}
+          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 font-bold text-2xl"
+        >
+          ✕
+        </button>
 
-      <main className="max-w-[1200px] mx-auto mt-8 px-5">
+        {/* Contenido (idéntico al original sin Navbar y <main>) */}
         <div className="grid gap-8 md:grid-cols-2">
           <div className="bg-white rounded-lg shadow p-6">
             <div className="min-h-[350px] flex items-center justify-center relative overflow-hidden">
               {selectedImage ? (
-                <img src={selectedImage} alt="Vista previa de la receta" className="max-h-full max-w-full object-cover rounded-lg" />
+                <img
+                  src={selectedImage}
+                  alt="Vista previa de la receta"
+                  className="max-h-full max-w-full object-cover rounded-lg"
+                />
               ) : (
                 <button
                   onClick={handleUploadButtonClick}
@@ -142,14 +152,12 @@ export default function CreateRecipePage() {
                 value={newIngredient}
                 onChange={(e) => setNewIngredient(e.target.value)}
                 onKeyPress={(e) => {
-                  if (e.key === 'Enter') {
-                    handleAddIngredient();
-                  }
+                  if (e.key === 'Enter') handleAddIngredient();
                 }}
               />
               <button
                 onClick={handleAddIngredient}
-                className="bg-[#FF8C42] text-white py-2 px-3 rounded font-bold cursor-pointer inline-flex items-center justify-center gap-2 text-sm hover:bg-orange-600 transition-colors"
+                className="bg-[#FF8C42] text-white py-2 px-3 rounded font-bold text-sm hover:bg-orange-600 transition-colors"
               >
                 +
               </button>
@@ -179,7 +187,7 @@ export default function CreateRecipePage() {
               ></textarea>
               <button
                 onClick={handleAddInstruction}
-                className="bg-[#FF8C42] text-white py-2 px-3 rounded font-bold cursor-pointer inline-flex items-center justify-center gap-2 text-sm hover:bg-orange-600 transition-colors self-end"
+                className="bg-[#FF8C42] text-white py-2 px-3 rounded font-bold text-sm hover:bg-orange-600 transition-colors self-end"
               >
                 +
               </button>
@@ -188,11 +196,11 @@ export default function CreateRecipePage() {
         </div>
 
         <div className="flex justify-center mt-8">
-          <button className="bg-[#FF8C42] text-white py-3 px-8 rounded font-bold cursor-pointer inline-flex items-center justify-center gap-2 hover:bg-orange-600 transition-colors text-lg shadow">
+          <button className="bg-[#FF8C42] text-white py-3 px-8 rounded font-bold cursor-pointer hover:bg-orange-600 text-lg shadow">
             Subir receta
           </button>
         </div>
-      </main>
-    </>
+      </div>
+    </div>
   );
 }

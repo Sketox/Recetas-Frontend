@@ -8,7 +8,8 @@ import RecipeCard from "../components/recipeCard";
 import CategoryCard from "../components/category";
 import CTA from "../components/CTA";
 import { fetchRecipesFromAI } from "../lib/api";
-
+import ChatWidget from "../components/ChatWidget";
+ 
 const mockRecipes = [
   {
     title: "Paella Valenciana",
@@ -89,13 +90,17 @@ export default function HomePage() {
         <CTA />
       </div>
 
-      {/* Botón flotante del chat */}
+      <div>
+        <ChatWidget />
+      </div>
+
+      {/* Botón flotante del chat 
       <button
         className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-blue-600 text-white text-2xl shadow-lg hover:bg-blue-700 z-50"
         onClick={() => setIsChatOpen(!isChatOpen)}
       >
         💬
-      </button>
+      </button>*/}
 
       {/* Chat flotante */}
       {isChatOpen && (
