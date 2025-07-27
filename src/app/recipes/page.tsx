@@ -1,6 +1,7 @@
 "use client";
+
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { Recipe } from "../../types/recipe";
 import RecipeCard from "@/components/recipeCard";
 
@@ -12,6 +13,12 @@ export default function RecipesPage() {
   const [selectedDifficulty, setSelectedDifficulty] = useState("");
 
   const searchParams = useSearchParams();
+  const router = useRouter();
+
+  const handleViewRecipe = (recipe: Recipe) => {
+    localStorage.setItem("selectedRecipe", JSON.stringify(recipe));
+    router.push("/recipe_detail");
+  };
 
   // ✅ Detectar categoría desde la URL
   useEffect(() => {
@@ -98,7 +105,7 @@ export default function RecipesPage() {
         >
           <option>Filtrar por dificultad</option>
           <option value="Fácil">Fácil</option>
-          <option value="Media">Intermedio</option>
+          <option value="Intermedio">Intermedio</option>
           <option value="Difícil">Difícil</option>
         </select>
       </div>
@@ -115,9 +122,10 @@ export default function RecipesPage() {
               title={recipe.title}
               description={recipe.description}
               imageUrl={recipe.imageUrl}
-              time={(recipe.prepTime || 0) + (recipe.cookTime || 0)} 
-              difficulty={recipe.difficulty || "Fácil"}
-              rating={recipe.rating || 4.5}
+              time={(recipe.prepTime || 0) + (recipe.cookTime || 0)}
+              difficulty={recipe.difficulty}
+              rating={recipe.rating}
+              onViewRecipe={() => handleViewRecipe(recipe)}
             />
           ))
         ) : (

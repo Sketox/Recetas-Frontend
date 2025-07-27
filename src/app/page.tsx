@@ -84,16 +84,22 @@ export default function HomePage() {
           <p>Cargando...</p>
         ) : recipes.length > 0 ? (
           <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            {recipes.slice(0, 4).map((r, i) => (
-              <RecipeCard
-                title={r.title}
-                description={r.description}
-                imageUrl={r.imageUrl}
-                time={(r.prepTime || 0) + (r.cookTime || 0)}
-                difficulty={r.difficulty}
-                rating={r.rating}
-              />
-            ))}
+          {recipes.slice(0, 4).map((r, i) => (
+            <RecipeCard
+              key={i}
+              title={r.title}
+              description={r.description}
+              imageUrl={r.imageUrl}
+              time={(r.prepTime || 0) + (r.cookTime || 0)}
+              difficulty={r.difficulty}
+              rating={r.rating}
+              onViewRecipe={() => {
+                localStorage.setItem("selectedRecipe", JSON.stringify(r)); // ✅ Guardar receta
+                router.push("/recipe_detail"); // ✅ Redirigir
+              }}
+            />
+          ))}
+
           </div>
         ) : (
           <p>No hay recetas disponibles</p>
