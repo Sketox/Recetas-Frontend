@@ -67,6 +67,9 @@ export default function HomePage() {
     router.push("/recipe_detail");
   };
 
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
+
+
   return (
     <div>
       <div className="mt-10"></div>
@@ -124,7 +127,6 @@ export default function HomePage() {
       </section>
 
 
-        <CTA onOpenModal={() => setIsModalOpen(true)} />
 
       {/* Botón flotante del chat */}
       <button
@@ -175,7 +177,48 @@ export default function HomePage() {
             </div>
           ))}
         </div>
+
       )}
+    
+    <CTA
+      onOpenModal={() => setIsModalOpen(true)}
+      onRequestAuth={() => setShowAuthPrompt(true)}
+    />
+
+        {showAuthPrompt && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/10 backdrop-blur-sm">
+              <div className="bg-white p-6 rounded-lg shadow-lg text-center max-w-sm relative">
+                <button
+                  onClick={() => setShowAuthPrompt(false)}
+                  className="absolute top-2 right-2 text-gray-500 hover:text-black text-2xl font-bold"
+                >
+                  ✖
+                </button>
+                <h3 className="text-xl font-bold mb-4 text-gray-800">
+                  Inicia sesión para compartir recetas
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  Debes estar registrado para poder subir tus recetas.
+                </p>
+                <div className="flex justify-center gap-4">
+                  <button
+                    onClick={() => router.push("/login")}
+                    className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition"
+                  >
+                    Iniciar Sesión
+                  </button>
+                  <button
+                    onClick={() => router.push("/register")}
+                    className="px-4 py-2 border border-orange-500 text-orange-500 rounded hover:bg-orange-100 transition"
+                  >
+                    Registrarse
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+
       {/* Función del botón de crear receta */}
 
       <Modal isOpen={isModalOpen} onClose={handleCloseModal}>
