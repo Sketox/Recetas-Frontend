@@ -1,28 +1,41 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import CreateRecipeModal from './page';
+import { FaPlus } from "react-icons/fa";
+import { useAuth } from "@/context/AuthContext";
 
-const CTA = () => {
-  const [showModal, setShowModal] = useState(false);
+interface CTAProps {
+  onOpenModal: () => void;
+  onRequestAuth: () => void;
+}
+
+const CTA: React.FC<CTAProps> = ({ onOpenModal, onRequestAuth }) => {
+  const { isAuthenticated } = useAuth();
+
+  const handleClick = () => {
+    if (isAuthenticated) {
+      onOpenModal();
+    } else {
+      onRequestAuth();
+    }
+  };
 
   return (
-    <>
-      <section className="bg-gray-100 py-10 px-4 text-center rounded-lg">
-        <h2 className="text-xl font-semibold mb-2">¿Tienes una receta para compartir?</h2>
-        <p className="text-gray-500 mb-4">
-          Comparte tus creaciones culinarias con nuestra comunidad.
-        </p>
-        <button
-          className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700"
-          onClick={() => setShowModal(true)}
-        >
-          + Crear Nueva Receta
-        </button>
-      </section>
+    <section className="w-full bg-[#f6eee9] py-11 px-5 text-center">
+      <h2 className="text-2xl font-extrabold text-[#3a2f2f] mb-2">
+        ¿Tienes una receta para compartir?
+      </h2>
+      <p className="text-gray-600 mb-6 max-w-2xl mx-auto">
+        Comparte tus creaciones culinarias con nuestra comunidad. Sube tus
+        recetas favoritas y ayuda a otros a descubrir nuevos sabores.
+      </p>
 
-      {showModal && <CreateRecipeModal onClose={() => setShowModal(false)} />}
-    </>
+      <button
+        onClick={handleClick}
+        className="flex items-center justify-center gap-2 bg-orange-500 hover:bg-orange-600 text-white font-semibold px-6 py-3 rounded-lg text-lg mx-auto transition-all duration-300 transform hover:scale-110 cursor-pointer"
+      >
+        <FaPlus className="text-white" /> Crear
+      </button>
+    </section>
   );
 };
 

@@ -1,35 +1,15 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Navbar from "@/components/navbar";
 import Hero from "../components/hero";
+import EditorCarousel from "../components/Carousel";
 import RecipeCard from "../components/recipeCard";
 import CategoryCard from "../components/category";
 import CTA from "../components/CTA";
-import { fetchRecipesFromAI } from "../lib/api";
-import ChatWidget from "../components/ChatWidget";
- 
-const mockRecipes = [
-  {
-    title: "Paella Valenciana",
-    description:
-      "El plato más internacional de la cocina española, originario de Valencia.",
-    imageUrl: "/images/paella.jpg",
-    time: 55,
-    difficulty: "Media",
-    rating: 4.9,
-  },
-  {
-    title: "Croquetas de Jamón",
-    description:
-      "Tapa española por excelencia, cremosas por dentro y crujientes por fuera.",
-    imageUrl: "/images/croquetas.jpg",
-    time: 50,
-    difficulty: "Fácil",
-    rating: 4.7,
-  },
-];
+import { fetchRecipesFromAI, getRecipes } from "../lib/api";
+import Modal from '../components/modal';
+import CreateRecipeForm from '../components/create_recipe_form';
 
 const categories = [
   { icon: "🥐", name: "Desayuno", count: 1 },
@@ -41,9 +21,38 @@ const categories = [
 
 export default function HomePage() {
   const [isChatOpen, setIsChatOpen] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [input, setInput] = useState("");
   const [recipes, setRecipes] = useState<any[]>([]);
-  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showAlert, setShowAlert] = useState(false);
+  const handleCloseModal = () => setIsModalOpen(false);
+  const router = useRouter(); 
+  
+
+  const handleRecipeUploaded = () => {
+    setShowAlert(true);
+    setIsModalOpen(false); // Cierra el modal
+
+    setTimeout(() => setShowAlert(false), 3000); // Oculta la alerta
+  };
+
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const data = await getRecipes();
+        setRecipes(data);
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   const handleSend = async () => {
     if (input.trim() === "") return;
@@ -58,49 +67,75 @@ export default function HomePage() {
     router.push("/recipe_detail");
   };
 
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
+
+
   return (
     <div>
-      <Navbar />
+      <div className="mt-10"></div>
       <Hero />
 
+      <div className="max-w-7xl mx-auto px-4 mt-12">
+        <h2 className="text-2xl font-semibold mb-4">Selección del Editor</h2>
+      </div>
+      <EditorCarousel />
+
+      {/* Recetas Destacadas dinámicas */}
       <section className="max-w-7xl mx-auto px-4 py-10">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-semibold">Recetas Destacadas</h2>
-          <a href="#" className="text-blue-600 text-sm hover:underline">
-            Ver todas →
-          </a>
-        </div>
-        <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-          {mockRecipes.map((r, i) => (
-            <RecipeCard key={i} {...r} />
+        <h2 className="text-2xl font-semibold mb-6">Recetas Destacadas</h2>
+        {loading ? (
+          <p>Cargando...</p>
+        ) : recipes.length > 0 ? (
+          <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+          {recipes.slice(0, 4).map((r, i) => (
+            <RecipeCard
+              key={i}
+              title={r.title}
+              description={r.description}
+              imageUrl={r.imageUrl}
+              time={(r.prepTime || 0) + (r.cookTime || 0)}
+              difficulty={r.difficulty}
+              rating={r.rating}
+              onViewRecipe={() => {
+                localStorage.setItem("selectedRecipe", JSON.stringify(r)); // ✅ Guardar receta
+                router.push("/recipe_detail"); // ✅ Redirigir
+              }}
+            />
           ))}
-        </div>
+
+          </div>
+        ) : (
+          <p>No hay recetas disponibles</p>
+        )}
       </section>
 
       <section className="max-w-7xl mx-auto px-4 py-10">
         <h2 className="text-2xl font-semibold mb-6">Categorías</h2>
         <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
           {categories.map((c, i) => (
-            <CategoryCard key={i} {...c} />
+            <CategoryCard
+              key={i}
+              {...c}
+              isActive={selectedCategory === c.name}
+              onClick={() => {
+                setSelectedCategory(c.name); 
+                router.push(`/recipes?category=${encodeURIComponent(c.name)}`);
+              }}
+            />
           ))}
         </div>
       </section>
 
-      <div className="max-w-3xl mx-auto px-4 pb-16">
-        <CTA />
-      </div>
 
-      <div>
-        <ChatWidget />
-      </div>
 
-      {/* Botón flotante del chat 
+      {/* Botón flotante del chat */}
       <button
         className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-blue-600 text-white text-2xl shadow-lg hover:bg-blue-700 z-50"
         onClick={() => setIsChatOpen(!isChatOpen)}
       >
         💬
-      </button>*/}
+      </button>
+
 
       {/* Chat flotante */}
       {isChatOpen && (
@@ -142,7 +177,55 @@ export default function HomePage() {
             </div>
           ))}
         </div>
+
       )}
+    
+    <CTA
+      onOpenModal={() => setIsModalOpen(true)}
+      onRequestAuth={() => setShowAuthPrompt(true)}
+    />
+
+        {showAuthPrompt && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/10 backdrop-blur-sm">
+              <div className="bg-white p-6 rounded-lg shadow-lg text-center max-w-sm relative">
+                <button
+                  onClick={() => setShowAuthPrompt(false)}
+                  className="absolute top-2 right-2 text-gray-500 hover:text-black text-2xl font-bold"
+                >
+                  ✖
+                </button>
+                <h3 className="text-xl font-bold mb-4 text-gray-800">
+                  Inicia sesión para compartir recetas
+                </h3>
+                <p className="text-gray-600 mb-6">
+                  Debes estar registrado para poder subir tus recetas.
+                </p>
+                <div className="flex justify-center gap-4">
+                  <button
+                    onClick={() => router.push("/login")}
+                    className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition"
+                  >
+                    Iniciar Sesión
+                  </button>
+                  <button
+                    onClick={() => router.push("/register")}
+                    className="px-4 py-2 border border-orange-500 text-orange-500 rounded hover:bg-orange-100 transition"
+                  >
+                    Registrarse
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+
+      {/* Función del botón de crear receta */}
+
+      <Modal isOpen={isModalOpen} onClose={handleCloseModal}>
+        <CreateRecipeForm onRecipeUploaded={handleRecipeUploaded} />
+      </Modal>
+
     </div>
+
   );
 }

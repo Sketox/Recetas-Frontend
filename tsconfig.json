@@ -32,7 +32,7 @@
     ".next/types/**/*.ts",
     "**/*.ts",
     "**/*.tsx"
-  ],
+, "src/components/create_recipe_form.jsx", "src/components/create_recipe_form.js"  ],
   "exclude": [
     "node_modules"
   ]
