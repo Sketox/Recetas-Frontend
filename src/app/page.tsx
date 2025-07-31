@@ -10,6 +10,7 @@ import CTA from "../components/CTA";
 import { fetchRecipesFromAI, getRecipes } from "../lib/api";
 import Modal from '../components/modal';
 import CreateRecipeForm from '../components/create_recipe_form';
+import ChatWidget from "@/components/ChatWidget";
 
 const categories = [
   { icon: "🥐", name: "Desayuno", count: 1 },
@@ -126,15 +127,10 @@ export default function HomePage() {
         </div>
       </section>
 
-
-
       {/* Botón flotante del chat */}
-      <button
-        className="fixed bottom-6 right-6 w-14 h-14 rounded-full bg-blue-600 text-white text-2xl shadow-lg hover:bg-blue-700 z-50"
-        onClick={() => setIsChatOpen(!isChatOpen)}
-      >
-        💬
-      </button>
+      <div>
+         <ChatWidget />
+      </div>
 
 
       {/* Chat flotante */}

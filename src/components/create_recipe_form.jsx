@@ -2,11 +2,7 @@
 'use client';
 import React, { useState } from 'react';
 
-<<<<<<<< HEAD:src/components/page.tsx
-export default function CreateRecipeModal({ onClose }: { onClose: () => void }) {
-========
 export default function createRecipeForm({ onRecipeUploaded  }) {
->>>>>>>> samuel:src/components/create_recipe_form.jsx
   const [selectedImage, setSelectedImage] = useState(null);
   const [ingredients, setIngredients] = useState([]);
   const [newIngredient, setNewIngredient] = useState('');
@@ -68,17 +64,6 @@ export default function createRecipeForm({ onRecipeUploaded  }) {
   };
 
   return (
-<<<<<<<< HEAD:src/components/page.tsx
-    <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center">
-      <div className="relative bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-y-auto p-6">
-        {/* Botón cerrar */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 font-bold text-2xl"
-        >
-          ✕
-        </button>
-========
     <>
       {showAlert && (
         <div className="bg-green-100 text-green-800 p-2 rounded mb-4 text-center font-semibold">
@@ -86,18 +71,13 @@ export default function createRecipeForm({ onRecipeUploaded  }) {
 
         </div>
       )}
->>>>>>>> samuel:src/components/create_recipe_form.jsx
 
-        {/* Contenido (idéntico al original sin Navbar y <main>) */}
+      <main className="max-w-[1200px] mx-auto mt-8 px-5">
         <div className="grid gap-8 md:grid-cols-2">
           <div className="bg-white rounded-lg shadow p-6">
             <div className="min-h-[350px] flex items-center justify-center relative overflow-hidden">
               {selectedImage ? (
-                <img
-                  src={selectedImage}
-                  alt="Vista previa de la receta"
-                  className="max-h-full max-w-full object-cover rounded-lg"
-                />
+                <img src={selectedImage} alt="Vista previa de la receta" className="max-h-full max-w-full object-cover rounded-lg" />
               ) : (
                 <button
                   onClick={handleUploadButtonClick}
@@ -184,59 +164,6 @@ export default function createRecipeForm({ onRecipeUploaded  }) {
                 className="flex-1 min-w-[120px] p-1 outline-none text-sm"
                 value={newIngredient}
                 onChange={(e) => setNewIngredient(e.target.value)}
-<<<<<<<< HEAD:src/components/page.tsx
-                onKeyPress={(e) => {
-                  if (e.key === 'Enter') handleAddIngredient();
-                }}
-              />
-              <button
-                onClick={handleAddIngredient}
-                className="bg-[#FF8C42] text-white py-2 px-3 rounded font-bold text-sm hover:bg-orange-600 transition-colors"
-              >
-                +
-              </button>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-xl font-bold mb-4 text-gray-800">Instrucciones</h2>
-            {instructions.map((instruction, index) => (
-              <div key={index} className="flex items-start gap-2 mb-2">
-                <span className="text-lg font-bold text-gray-600 min-w-[25px] text-right pt-2">{index + 1}.</span>
-                <span className="flex-1 text-gray-700 pt-2">{instruction}</span>
-                <button
-                  onClick={() => handleRemoveInstruction(index)}
-                  className="ml-2 text-red-500 hover:text-red-700 font-bold self-start text-sm"
-                >
-                  Eliminar
-                </button>
-              </div>
-            ))}
-            <div className="flex items-center gap-2 mt-4">
-              <textarea
-                placeholder="Escribir nueva instrucción..."
-                className="w-full p-2 border border-gray-300 rounded text-base resize-vertical min-h-[50px] outline-none focus:border-[#FF8C42] transition-colors"
-                value={newInstruction}
-                onChange={(e) => setNewInstruction(e.target.value)}
-              ></textarea>
-              <button
-                onClick={handleAddInstruction}
-                className="bg-[#FF8C42] text-white py-2 px-3 rounded font-bold text-sm hover:bg-orange-600 transition-colors self-end"
-              >
-                +
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex justify-center mt-8">
-          <button className="bg-[#FF8C42] text-white py-3 px-8 rounded font-bold cursor-pointer hover:bg-orange-600 text-lg shadow">
-            Subir receta
-          </button>
-        </div>
-      </div>
-    </div>
-========
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
@@ -297,6 +224,5 @@ export default function createRecipeForm({ onRecipeUploaded  }) {
       </main>
       
     </>
->>>>>>>> samuel:src/components/create_recipe_form.jsx
   );
 }

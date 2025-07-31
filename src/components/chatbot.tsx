@@ -74,17 +74,6 @@ export default function Chatbot() {
 
   return (
     <div className="flex flex-col h-full max-h-[450px] w-full rounded-lg border border-gray-300 bg-white shadow-lg overflow-hidden">
-      {/* Header */}
-      <div className="flex justify-between items-center bg-blue-600 text-white px-4 py-2 font-semibold text-lg">
-        <span>Asistente IA</span>
-        <button
-          onClick={handleGoRecipeDetail}
-          className="text-sm underline opacity-80 hover:opacity-100"
-          title="Ir a detalle"
-        >
-          Ver Receta
-        </button>
-      </div>
 
       {/* Chat messages */}
       <div
@@ -104,8 +93,8 @@ export default function Chatbot() {
           >
             <div
               className={`max-w-[70%] px-4 py-2 rounded-xl whitespace-pre-wrap ${msg.from === "user"
-                  ? "bg-blue-600 text-white rounded-br-none"
-                  : "bg-gray-200 text-gray-900 rounded-bl-none"
+                ? "bg-blue-600 text-white rounded-br-none"
+                : "bg-gray-200 text-gray-900 rounded-bl-none"
                 }`}
             >
               {msg.text}
@@ -137,11 +126,13 @@ export default function Chatbot() {
         <button
           onClick={listening ? undefined : () => sendMessage(input)}
           disabled={loading || listening || !input.trim()}
-          className="ml-2 px-4 py-2 rounded-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white"
+          style={{ backgroundColor: "var(--color-orange-500)" }}
+          className="ml-2 px-4 py-2 rounded-full text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
           title="Enviar mensaje"
         >
           ➤
         </button>
+
 
         <button
           onClick={toggleListening}

@@ -35,6 +35,12 @@ export default function Navbar() {
         >
           Ver Recetas
         </Link>
+        <Link
+          href="/diet"
+          className="ml-4 text-gray-700 hover:text-orange-500 transition-transform duration-300 hover:scale-110"
+        >
+          Mostrar Dieta
+        </Link>
       </div>
 
       {/* Contenedor derecho */}
