@@ -22,7 +22,7 @@ export default function Navbar() {
       <div className="flex items-center gap-2">
         <Link href="/">
           <Image
-            src="/cooksy.svg"
+            src="/Cooksy1.svg"
             alt="Cooksy Logo"
             width={100}
             height={100}

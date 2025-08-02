@@ -11,15 +11,13 @@ import IconPicker from "@/components/IconPicker";
 interface UserProfile {
   name: string;
   email: string;
-  location?: string;
-  avatar?: string | null;
-  pronouns?: string;
 }
 
 export default function ProfilePage() {
   const router = useRouter();
   const { userIcon, logout } = useAuth();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+  const [createdRecipes, setCreatedRecipes] = useState([]);
 
   const [favoriteRecipes] = useState([
     {
@@ -30,11 +28,33 @@ export default function ProfilePage() {
     },
   ]);
 
-  const [createdRecipes] = useState([
+  const [setcreatedRecipes] = useState([
     { id: 2, name: "Nombre del Plato", description: "Descripción del plato", imageUrl: null },
   ]);
 
   const IconComponent = getIconComponent(userIcon || "user-circle");
+
+  useEffect(() => {
+  const fetchCreatedRecipes = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    try {
+      const res = await fetch("http://localhost:5000/api/recipes/my-recipes", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      if (!res.ok) throw new Error("No se pudieron obtener las recetas");
+
+      const data = await res.json();
+      setCreatedRecipes(data); // Aquí debes usar useState para manejar esto
+    } catch (error) {
+      console.error("Error al obtener recetas creadas:", error);
+    }
+  };
+
+  fetchCreatedRecipes();
+}, []);
 
   
 useEffect(() => {
