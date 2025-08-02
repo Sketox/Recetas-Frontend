@@ -36,20 +36,26 @@ export default function ProfilePage() {
 
   const IconComponent = getIconComponent(userIcon || "user-circle");
 
-  useEffect(() => {
+  
+useEffect(() => {
     const fetchUserProfile = async () => {
       const token = localStorage.getItem("token");
+      console.log("🔐 Token:", token);
+
       if (!token) return;
 
       try {
-        const res = await fetch("http://localhost:5000/api/user/profile", {
+        const res = await fetch("http://localhost:5000/api/user/me", {
           headers: { Authorization: `Bearer ${token}` },
         });
 
         if (!res.ok) throw new Error("No se pudo obtener el perfil");
 
         const data = await res.json();
+        console.log("📦 Respuesta del backend:", data);
+
         setUserProfile(data);
+
       } catch (error) {
         console.error("Error al obtener perfil:", error);
       }
@@ -61,18 +67,8 @@ export default function ProfilePage() {
   return (
     <main className="min-h-screen bg-gray-100 pb-16">
       <section className="relative bg-[#FF8C42] h-48 sm:h-60 flex items-end justify-center">
-        <div className="absolute -bottom-16 sm:-bottom-20 w-32 h-32 sm:w-40 sm:h-40 rounded-full bg-gray-300 flex items-center justify-center border-4 border-white shadow-lg overflow-hidden">
-          {userProfile?.avatar ? (
-            <Image
-              src={userProfile.avatar}
-              alt="Avatar del usuario"
-              width={160}
-              height={160}
-              className="object-cover w-full h-full"
-            />
-          ) : (
-            <IconComponent className="w-20 h-20 text-gray-600" />
-          )}
+        <div className="absolute -bottom-16 sm:-bottom-20 w-32 h-32 sm:w-40 sm:h-40 rounded-full bg-white flex items-center justify-center border-4 border-white shadow-lg overflow-hidden">
+          <IconComponent className="w-25 h-25 text-orange-400" />
         </div>
       </section>
 
@@ -80,8 +76,9 @@ export default function ProfilePage() {
         <h1 className="text-3xl font-bold text-gray-900">
           {userProfile?.name || "Cargando..."}
         </h1>
-        <p className="text-gray-600 text-sm mt-1">{userProfile?.pronouns || ""}</p>
-        <p className="text-gray-700 text-md mt-2">{userProfile?.location || ""}</p>
+        <p className="text-gray-700 text-md mt-2">
+          {userProfile?.email || ""}
+        </p>
 
         <div className="mt-6">
           <h3 className="text-lg font-semibold mb-2">Selecciona tu ícono:</h3>
