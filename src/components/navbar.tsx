@@ -41,6 +41,12 @@ export default function Navbar() {
         >
           Mostrar Dieta
         </Link>
+        <Link
+          href="/ChatBot"
+          className="ml-4 text-gray-700 hover:text-orange-500 transition-transform duration-300 hover:scale-110"
+        >
+          ChatBot
+        </Link>
       </div>
 
       {/* Contenedor derecho */}
