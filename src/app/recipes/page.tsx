@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Recipe } from "../../types/recipe";
+import { Recipe } from "types/recipe";
 import RecipeCard from "@/components/recipeCard";
+import { fetchFromBackend } from "@/services/index";
+
 
 export default function RecipesPage() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
@@ -29,22 +31,26 @@ export default function RecipesPage() {
   }, [searchParams]);
 
   // ✅ Fetch de recetas
+  
   useEffect(() => {
-    const fetchRecipes = async () => {
-      try {
-        const res = await fetch("http://localhost:5000/api/recipes", {
-          cache: "no-store",
-        });
-        const data = await res.json();
-        setRecipes(data);
-        setFilteredRecipes(data);
-      } catch (error) {
-        console.error("Error fetching recipes:", error);
-      }
-    };
+      const fetchRecipes = async () => {
+        try {
+          const data = await fetchFromBackend<Recipe[]>("/recipes", {
+            method: "GET",
+            cache: "no-store",
+          });
 
-    fetchRecipes();
-  }, []);
+          setRecipes(data);
+          setFilteredRecipes(data);
+        } catch (error) {
+          console.error("Error fetching recipes:", error);
+        }
+      };
+
+      fetchRecipes();
+    }, []);
+
+
 
   // ✅ Lógica de filtrado
   useEffect(() => {

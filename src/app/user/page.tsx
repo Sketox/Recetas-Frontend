@@ -7,6 +7,8 @@ import { FaEdit } from "react-icons/fa";
 import { useAuth } from "@/context/AuthContext";
 import { getIconComponent } from "@/utils/IconSelector";
 import IconPicker from "@/components/IconPicker";
+import { fetchFromBackend } from "@/services/index";
+
 
 interface UserProfile {
   name: string;
@@ -40,7 +42,7 @@ export default function ProfilePage() {
     if (!token) return;
 
     try {
-      const res = await fetch("http://localhost:5000/api/recipes/my-recipes", {
+      const res = await fetch("/recipes/my-recipes", {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -57,6 +59,7 @@ export default function ProfilePage() {
 }, []);
 
   
+
 useEffect(() => {
     const fetchUserProfile = async () => {
       const token = localStorage.getItem("token");
@@ -65,17 +68,15 @@ useEffect(() => {
       if (!token) return;
 
       try {
-        const res = await fetch("http://localhost:5000/api/user/me", {
-          headers: { Authorization: `Bearer ${token}` },
+        const data = await fetchFromBackend("/user/me", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         });
 
-        if (!res.ok) throw new Error("No se pudo obtener el perfil");
-
-        const data = await res.json();
         console.log("📦 Respuesta del backend:", data);
-
-        setUserProfile(data);
-
+        setUserProfile(data as UserProfile);
       } catch (error) {
         console.error("Error al obtener perfil:", error);
       }
@@ -83,6 +84,7 @@ useEffect(() => {
 
     fetchUserProfile();
   }, []);
+
 
   return (
     <main className="min-h-screen bg-gray-100 pb-16">

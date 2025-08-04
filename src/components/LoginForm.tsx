@@ -5,6 +5,9 @@ import { useState } from "react";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { fetchFromBackend } from "@/services/index";
+import { LoginResponse } from "types/auth";
+
 
 export default function LoginForm() {
   const [email, setEmail] = useState("");
@@ -34,28 +37,28 @@ export default function LoginForm() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (!errors.email && !errors.password && email && password) {
-      try {
-        const res = await fetch("http://localhost:5000/api/auth/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password }),
-        });
+  if (!errors.email && !errors.password && email && password) {
+    try {
+      
+    const data = await fetchFromBackend<LoginResponse>("/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
 
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Error al iniciar sesión");
-
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("userIcon", data.icon);
-        login(data.token, data.icon);
-        router.push("/");
-      } catch (err: any) {
-        console.error("❌ Error:", err.message);
-      }
+      // ✅ Aquí data ya contiene { token, icon }
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("userIcon", data.icon);
+      login(data.token, data.icon);
+      router.push("/");
+    } catch (err: any) {
+      console.error("❌ Error:", err.message);
     }
-  };
+  }
+};
+
 
   return (
     <div className="relative min-h-screen flex items-center justify-center">
