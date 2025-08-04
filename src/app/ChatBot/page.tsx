@@ -5,52 +5,64 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MicrophoneIcon, PlusIcon, Cog6ToothIcon, PaperAirplaneIcon } from '@heroicons/react/24/outline';
 import { Bars3BottomLeftIcon } from '@heroicons/react/24/solid';
+import { fetchFromBackend } from "@/services/index";
+
+
 
 export default function ChatPage() {
   const [input, setInput] = useState('');
   const [messages, setMessages] = useState([]);
   const messagesEndRef = useRef(null);
+  const [loading, setLoading] = useState(false);
 
-  const handleSend = async () => {
-    if (!input.trim()) return;
+  
+const handleSend = async () => {
+  if (!input.trim()) return;
+  setLoading(true);
 
-    const userMessage = { id: Date.now(), text: input, role: 'user' };
-    setMessages(prev => [...prev, userMessage]);
-    setInput('');
+  const userMessage = { id: Date.now(), text: input, role: 'user' };
+  setMessages(prev => [...prev, userMessage]);
+  setInput('');
 
-    try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ message: input }),
-      });
+  try {
+    const data = await fetchFromBackend('/ai/chat', {
+      method: 'POST',
+      body: JSON.stringify({ message: input }),
+    });
 
-      const data = await response.json();
-
-      if (data.success && data.recipes) {
-        const botMessage = {
-          id: Date.now() + 1,
-          role: 'bot',
-          text: JSON.stringify(data.recipes, null, 2),
-        };
-        setMessages(prev => [...prev, botMessage]);
-      } else {
-        setMessages(prev => [...prev, {
-          id: Date.now() + 1,
-          role: 'bot',
-          text: 'Error al obtener respuesta del asistente.',
-        }]);
-      }
-    } catch (error) {
+    // Type guard for expected response shape
+    if (
+      typeof data === 'object' &&
+      data !== null &&
+      'success' in data &&
+      'recipes' in data &&
+      (data as { success: boolean }).success
+    ) {
+      const botMessage = {
+        id: Date.now() + 1,
+        role: 'bot',
+        text: JSON.stringify((data as { recipes: any }).recipes, null, 2),
+      };
+      setMessages(prev => [...prev, botMessage]);
+    } else {
       setMessages(prev => [...prev, {
         id: Date.now() + 1,
         role: 'bot',
-        text: 'Error al conectar con el servidor.',
+        text: 'Error al obtener respuesta del asistente.',
       }]);
     }
-  };
+
+  } catch (error) {
+    setMessages(prev => [...prev, {
+      id: Date.now() + 1,
+      role: 'bot',
+      text: 'Error al conectar con el servidor.',
+    }]);
+  }
+  setLoading(false);
+
+};
+
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
