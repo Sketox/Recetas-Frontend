@@ -6,6 +6,8 @@ import { FiEye, FiEyeOff } from "react-icons/fi";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { getRandomIcon } from "@/utils/IconSelector";
+import { fetchFromBackend } from "@/services/index";
+
 
 export default function RegisterForm() {
   const [formData, setFormData] = useState({
@@ -56,34 +58,41 @@ export default function RegisterForm() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const icon = getRandomIcon();
-    const { nombre, email, password } = formData;
+  e.preventDefault();
+  const icon = getRandomIcon();
+  const { nombre, email, password } = formData;
 
-    const isValid = Object.entries(validate).every(
-      ([field, fn]) => fn(formData[field as keyof typeof formData])
-    );
+  const isValid = Object.entries(validate).every(
+    ([field, fn]) => fn(formData[field as keyof typeof formData])
+  );
 
-    if (isValid) {
-      try {
-        const res = await fetch("https://tidy-lies-end.loca.lt/api/auth/register", {
+  if (isValid) {
+    try {
+      // Usamos fetchFromBackend para centralizar la lógica
+      const data = await fetchFromBackend<{ token: string }>(
+        "/auth/register",
+        {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name: nombre, email, password, icon }),
-        });
+        }
+      );
 
-        const data = await res.json();
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("userIcon", icon);
-        login(data.token, icon);
-        router.push("/");
-      } catch (error: any) {
-        console.error("❌ Error:", error.message);
-      }
-    } else {
-      console.log("❌ Errores en el formulario");
+      // Guardar en localStorage
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("userIcon", icon);
+
+      // Contexto o auth state
+      login(data.token, icon);
+
+      // Redirigir al home
+      router.push("/");
+    } catch (error: any) {
+      console.error("❌ Error:", error.message);
     }
-  };
+  } else {
+    console.log("❌ Errores en el formulario");
+  }
+};
 
   return (
     <div className="relative min-h-screen flex items-center backdrop-blur-md justify-center">
