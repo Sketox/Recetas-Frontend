@@ -1,5 +1,6 @@
 export interface Recipe {
-  id: string;
+  id?: string;
+  _id?: string;
   title: string;
   description: string;
   ingredients: string[];
@@ -11,6 +12,7 @@ export interface Recipe {
   category: "Desayuno" | "Almuerzo" | "Cena" | "Postre" | "Snack";
   imageUrl: string;
   rating: number;
+  userId?: string;
   createdAt: string;
   updatedAt: string;
 }

@@ -4,19 +4,94 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Recipe } from "@/types/recipe";
+import { fetchFromBackend } from "@/services/index";
 
 export default function RecipeDetailPage() {
   const [recipe, setRecipe] = useState<Recipe | null>(null);
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [isOwner, setIsOwner] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
+    // Obtener receta del localStorage
     const storedRecipe = localStorage.getItem("selectedRecipe");
     if (storedRecipe) {
       setRecipe(JSON.parse(storedRecipe));
     } else {
-      router.push("/recipes"); // Si no hay receta, redirige a listado
+      router.push("/recipes");
     }
+
+    // Obtener usuario actual
+    const fetchCurrentUser = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+
+      try {
+        const userData = await fetchFromBackend("/user/me", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        setCurrentUser(userData);
+      } catch (error) {
+        console.error("Error fetching user:", error);
+      }
+    };
+
+    fetchCurrentUser();
   }, [router]);
+
+  useEffect(() => {
+    // Verificar si el usuario actual es el dueño de la receta
+    if (recipe && currentUser) {
+      // Comparar tanto con _id como con id para mayor compatibilidad
+      const recipeOwnerId = recipe.userId;
+      const currentUserId = currentUser._id || currentUser.id;
+      
+      console.log("🔍 Verificando propietario:");
+      console.log("Recipe userId:", recipeOwnerId);
+      console.log("Current user ID:", currentUserId);
+      
+      setIsOwner(recipeOwnerId === currentUserId);
+    }
+  }, [recipe, currentUser]);
+
+  const handleEditRecipe = () => {
+    // Redirigir a una página de edición (crearemos esto)
+    localStorage.setItem("editingRecipe", JSON.stringify(recipe));
+    router.push("/edit-recipe");
+  };
+
+  const handleDeleteRecipe = async () => {
+    if (!recipe) return;
+    
+    const confirmDelete = confirm("¿Estás seguro de que quieres eliminar esta receta? Esta acción no se puede deshacer.");
+    
+    if (!confirmDelete) return;
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Debes iniciar sesión para eliminar recetas");
+      return;
+    }
+
+    try {
+      const recipeId = recipe._id || recipe.id;
+      await fetchFromBackend(`/recipes/${recipeId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      alert("Receta eliminada exitosamente");
+      router.push("/recipes"); // Redirigir a la lista de recetas
+    } catch (error) {
+      console.error("Error al eliminar receta:", error);
+      alert("Error al eliminar la receta. Inténtalo de nuevo.");
+    }
+  };
 
   if (!recipe) return <p className="text-center mt-10">Cargando receta...</p>;
 
@@ -24,18 +99,45 @@ export default function RecipeDetailPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
-      {/* Título */}
-      <h1 className="text-3xl font-bold mb-2">{recipe.title}</h1>
-      <p className="text-gray-600 mb-4">{recipe.description}</p>
+      {/* Título y botones de editar/eliminar */}
+      <div className="flex justify-between items-start mb-4">
+        <div>
+          <h1 className="text-3xl font-bold mb-2">{recipe.title}</h1>
+          <p className="text-gray-600">{recipe.description}</p>
+        </div>
+        {isOwner && (
+          <div className="flex gap-2">
+            <button
+              onClick={handleEditRecipe}
+              className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
+            >
+              ✏️ Editar
+            </button>
+            <button
+              onClick={handleDeleteRecipe}
+              className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors flex items-center gap-2"
+            >
+              🗑️ Eliminar
+            </button>
+          </div>
+        )}
+      </div>
 
       {/* Imagen */}
       <div className="relative w-full h-64 md:h-80 rounded-lg overflow-hidden shadow-md mb-6">
-        <Image
-          src={recipe.imageUrl}
-          alt={recipe.title}
-          fill
-          className="object-cover"
-        />
+        {recipe.imageUrl && recipe.imageUrl.trim() !== "" ? (
+          <Image
+            src={recipe.imageUrl}
+            alt={recipe.title}
+            fill
+            className="object-cover"
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-orange-400 to-orange-600 flex flex-col items-center justify-center text-white">
+            <div className="text-6xl mb-4">🍽️</div>
+            <h2 className="text-2xl font-bold">{recipe.title}</h2>
+          </div>
+        )}
       </div>
 
       {/* Info principal */}

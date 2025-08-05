@@ -22,11 +22,18 @@ export default function RecipesPage() {
     router.push("/recipe_detail");
   };
 
-  // ✅ Detectar categoría desde la URL
+  // ✅ Detectar categoría y búsqueda desde la URL
   useEffect(() => {
     const categoryFromUrl = searchParams.get("category");
+    const searchFromUrl = searchParams.get("search");
+    
     if (categoryFromUrl) {
       setSelectedCategory(categoryFromUrl);
+    }
+    
+    if (searchFromUrl) {
+      setSearchTerm(searchFromUrl);
+      console.log("🔍 Término de búsqueda desde URL:", searchFromUrl);
     }
   }, [searchParams]);
 
@@ -58,9 +65,15 @@ export default function RecipesPage() {
     let filtered = recipes;
 
     if (searchTerm) {
-      filtered = filtered.filter((recipe) =>
-        recipe.title.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      filtered = filtered.filter((recipe) => {
+        const titleMatch = recipe.title.toLowerCase().includes(searchTerm.toLowerCase());
+        const ingredientMatch = recipe.ingredients?.some(ingredient => 
+          ingredient.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        const descriptionMatch = recipe.description?.toLowerCase().includes(searchTerm.toLowerCase());
+        
+        return titleMatch || ingredientMatch || descriptionMatch;
+      });
     }
 
     if (selectedCategory && selectedCategory !== "Filtrar por categoría") {
@@ -77,6 +90,7 @@ export default function RecipesPage() {
       );
     }
 
+    console.log("🔍 Recetas filtradas:", filtered.length, "de", recipes.length);
     setFilteredRecipes(filtered);
   }, [searchTerm, selectedCategory, selectedDifficulty, recipes]);
 
@@ -118,14 +132,19 @@ export default function RecipesPage() {
       </div>
 
       <p className="text-gray-600 mb-4">
-        Mostrando {filteredRecipes.length} de {recipes.length} recetas
+        {searchTerm ? (
+          <>Mostrando {filteredRecipes.length} resultados para "<strong>{searchTerm}</strong>" de {recipes.length} recetas</>
+        ) : (
+          <>Mostrando {filteredRecipes.length} de {recipes.length} recetas</>
+        )}
       </p>
 
       <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
         {filteredRecipes.length > 0 ? (
           filteredRecipes.map((recipe) => (
             <RecipeCard
-              key={recipe.id}
+              key={recipe.id || recipe._id}
+              recipeId={recipe.id || recipe._id}
               title={recipe.title}
               description={recipe.description}
               imageUrl={recipe.imageUrl}

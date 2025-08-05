@@ -11,6 +11,7 @@ import { fetchRecipesFromAI, getRecipes } from "../lib/api";
 import Modal from '../components/modal';
 import CreateRecipeForm from '../components/create_recipe_form';
 import ChatWidget from "@/components/ChatWidget";
+import useTokenValidation from "@/hooks/useTokenValidation";
 
 const categories = [
   { icon: "🥐", name: "Desayuno", count: 1 },
@@ -21,6 +22,8 @@ const categories = [
 ];
 
 export default function HomePage() {
+  useTokenValidation(); // ✅ Validar tokens automáticamente
+  
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [input, setInput] = useState("");
@@ -102,7 +105,8 @@ export default function HomePage() {
           <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
           {recipes.slice(0, 4).map((r, i) => (
             <RecipeCard
-              key={i}
+              key={r._id || r.id || i}
+              recipeId={r._id || r.id}
               title={r.title}
               description={r.description}
               imageUrl={r.imageUrl}

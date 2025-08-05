@@ -20,8 +20,10 @@ export default function RegisterForm() {
     nombre: "",
     email: "",
     password: "",
+    general: "", // Para errores del servidor
   });
 
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const router = useRouter();
@@ -58,17 +60,25 @@ export default function RegisterForm() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  const icon = getRandomIcon();
-  const { nombre, email, password } = formData;
+    e.preventDefault();
+    setIsSubmitting(true);
+    setErrors(prev => ({ ...prev, general: "" })); // Limpiar errores previos
+    
+    const icon = getRandomIcon();
+    const { nombre, email, password } = formData;
 
-  const isValid = Object.entries(validate).every(
-    ([field, fn]) => fn(formData[field as keyof typeof formData])
-  );
+    const isValid = Object.entries(validate).every(
+      ([field, fn]) => fn(formData[field as keyof typeof formData])
+    );
 
-  if (isValid) {
+    if (!isValid) {
+      console.log("❌ Errores en el formulario");
+      setIsSubmitting(false);
+      return;
+    }
+
     try {
-      // Usamos fetchFromBackend para centralizar la lógica
+      console.log("📤 Enviando datos de registro...");
       const data = await fetchFromBackend<{ token: string }>(
         "/auth/register",
         {
@@ -77,6 +87,8 @@ export default function RegisterForm() {
         }
       );
 
+      console.log("✅ Registro exitoso");
+      
       // Guardar en localStorage
       localStorage.setItem("token", data.token);
       localStorage.setItem("userIcon", icon);
@@ -87,12 +99,20 @@ export default function RegisterForm() {
       // Redirigir al home
       router.push("/");
     } catch (error: any) {
-      console.error("❌ Error:", error.message);
+      console.error("❌ Error en registro:", error.message);
+      
+      // Mostrar error específico al usuario
+      if (error.message.includes("usuario ya existe") || error.message.includes("already exists")) {
+        setErrors(prev => ({ ...prev, general: "Ya existe una cuenta con este email" }));
+      } else if (error.message.includes("datos inválidos") || error.message.includes("invalid")) {
+        setErrors(prev => ({ ...prev, general: "Los datos proporcionados no son válidos" }));
+      } else {
+        setErrors(prev => ({ ...prev, general: "Error al crear la cuenta. Inténtalo de nuevo." }));
+      }
+    } finally {
+      setIsSubmitting(false);
     }
-  } else {
-    console.log("❌ Errores en el formulario");
-  }
-};
+  };
 
   return (
     <div className="relative min-h-screen flex items-center backdrop-blur-md justify-center">
@@ -117,6 +137,13 @@ export default function RegisterForm() {
         <h1 className="text-center text-3xl font-extrabold text-orange-500 mb-8">Regístrate</h1>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Mostrar error general del servidor */}
+          {errors.general && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+              {errors.general}
+            </div>
+          )}
+
           {[
             { label: "Nombre completo", type: "text", field: "nombre", placeholder: "Juan Pérez" },
             { label: "Email", type: "email", field: "email", placeholder: "example@gmail.com" },
@@ -165,9 +192,14 @@ export default function RegisterForm() {
 
           <button
             type="submit"
-            className="w-full bg-orange-500 text-white font-semibold py-3 rounded hover:bg-orange-600 transform hover:scale-105 transition duration-300 ease-in-out text-lg cursor-pointer"
+            disabled={isSubmitting}
+            className={`w-full font-semibold py-3 rounded transition duration-300 ease-in-out text-lg ${
+              isSubmitting 
+                ? 'bg-gray-400 cursor-not-allowed' 
+                : 'bg-orange-500 hover:bg-orange-600 transform hover:scale-105 cursor-pointer'
+            } text-white`}
           >
-            Continuar
+            {isSubmitting ? "Registrando..." : "Continuar"}
           </button>
         </form>
 

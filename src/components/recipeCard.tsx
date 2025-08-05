@@ -1,4 +1,7 @@
 import Image from "next/image";
+import { useState, useEffect } from "react";
+import { getBackgroundColor } from "@/utils/colorUtils";
+import { useFavorites } from "@/hooks/useFavorites";
 
 interface Props {
   title: string;
@@ -7,7 +10,8 @@ interface Props {
   time: number;
   difficulty: string;
   rating: number;
-  onViewRecipe?: () => void; // ✅ Nuevo
+  recipeId: string;
+  onViewRecipe?: () => void;
 }
 
 const RecipeCard = ({
@@ -17,29 +21,36 @@ const RecipeCard = ({
   time,
   difficulty,
   rating,
+  recipeId,
   onViewRecipe,
 }: Props) => {
-  // 🎨 Array de colores de fondo para tarjetas sin imagen
-  const backgroundColors = [
-    'bg-gradient-to-br from-orange-400 to-orange-600',
-    'bg-gradient-to-br from-red-400 to-red-600',
-    'bg-gradient-to-br from-yellow-400 to-yellow-600',
-    'bg-gradient-to-br from-green-400 to-green-600',
-    'bg-gradient-to-br from-blue-400 to-blue-600',
-    'bg-gradient-to-br from-purple-400 to-purple-600',
-    'bg-gradient-to-br from-pink-400 to-pink-600',
-    'bg-gradient-to-br from-indigo-400 to-indigo-600',
-    'bg-gradient-to-br from-teal-400 to-teal-600',
-    'bg-gradient-to-br from-cyan-400 to-cyan-600',
-  ];
+  const [isFavorite, setIsFavorite] = useState(false);
+  const [isToggling, setIsToggling] = useState(false);
+  const { checkIfFavorite, toggleFavorite } = useFavorites();
 
-  // 🎲 Función para obtener un color basado en el título (consistente)
-  const getBackgroundColor = (title: string) => {
-    let hash = 0;
-    for (let i = 0; i < title.length; i++) {
-      hash = title.charCodeAt(i) + ((hash << 5) - hash);
+  // Verificar si es favorito al cargar
+  useEffect(() => {
+    const checkStatus = async () => {
+      if (recipeId) {
+        const status = await checkIfFavorite(recipeId);
+        setIsFavorite(status);
+      }
+    };
+    checkStatus();
+  }, [recipeId, checkIfFavorite]);
+
+  const handleToggleFavorite = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    setIsToggling(true);
+    try {
+      const newStatus = await toggleFavorite(recipeId, isFavorite);
+      setIsFavorite(newStatus);
+    } catch (error: any) {
+      alert(error.message || "Error al modificar favoritos");
+    } finally {
+      setIsToggling(false);
     }
-    return backgroundColors[Math.abs(hash) % backgroundColors.length];
   };
 
   return (
@@ -60,6 +71,19 @@ const RecipeCard = ({
             </span>
           </div>
         )}
+        
+        {/* Botón de favoritos */}
+        <button
+          onClick={handleToggleFavorite}
+          disabled={isToggling}
+          className={`absolute top-2 right-2 w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+            isFavorite 
+              ? 'bg-red-500 text-white shadow-lg' 
+              : 'bg-white/80 text-gray-600 hover:bg-white hover:text-red-500'
+          } ${isToggling ? 'opacity-50' : ''}`}
+        >
+          {isFavorite ? '❤️' : '🤍'}
+        </button>
       </div>
       <div className="p-4">
         <h3 className="font-semibold text-gray-800 mb-1">{title}</h3>

@@ -1,8 +1,8 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { fetchFromBackend } from "@/services/index";
 
-export default function CreateRecipeForm({ onRecipeUploaded }) {
+export default function EditRecipeForm({ recipe, onRecipeUpdated, onClose }) {
   const [selectedImage, setSelectedImage] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [ingredients, setIngredients] = useState([]);
@@ -16,8 +16,29 @@ export default function CreateRecipeForm({ onRecipeUploaded }) {
   const [difficulty, setDifficulty] = useState('');
   const [category, setCategory] = useState('');
   const [servings, setServings] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [showAlert, setShowAlert] = useState(false);
+
+  // Cargar datos de la receta al montar el componente
+  useEffect(() => {
+    if (recipe) {
+      setTitle(recipe.title || '');
+      setDescription(recipe.description || '');
+      setIngredients(recipe.ingredients || []);
+      setInstructions(recipe.instructions || []);
+      setPrepTime(recipe.prepTime?.toString() || '');
+      setCookTime(recipe.cookTime?.toString() || '');
+      setDifficulty(recipe.difficulty || '');
+      setCategory(recipe.category || '');
+      setServings(recipe.servings?.toString() || '');
+      
+      // Si hay imagen existente, mostrarla
+      if (recipe.imageUrl) {
+        setSelectedImage(recipe.imageUrl);
+      }
+    }
+  }, [recipe]);
 
   const handleImageChange = (e) => {
     const file = e.target.files?.[0];
@@ -29,7 +50,7 @@ export default function CreateRecipeForm({ onRecipeUploaded }) {
     }
   };
 
-  const handleUploadButtonClick = () => document.getElementById('imageUpload')?.click();
+  const handleUploadButtonClick = () => document.getElementById('editImageUpload')?.click();
 
   const handleAdd = (value, setValue, list, setList) => {
     if (value.trim()) {
@@ -43,105 +64,105 @@ export default function CreateRecipeForm({ onRecipeUploaded }) {
   };
 
   const handleSubmitRecipe = async () => {
-  const token = localStorage.getItem("token");
-  if (!token) {
-    alert("Debes iniciar sesión para subir una receta.");
-    return;
-  }
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Debes iniciar sesión para editar una receta.");
+      return;
+    }
 
-  // ✅ Validación de campos obligatorios
-  if (
-    !title.trim() ||
-    !description.trim() ||
-    ingredients.length === 0 ||
-    instructions.length === 0 ||
-    !prepTime ||
-    !cookTime ||
-    !servings ||
-    !difficulty ||
-    !category
-  ) {
-    alert("Por favor completa todos los campos obligatorios.");
-    return;
-  }
+    // ✅ Validación de campos obligatorios
+    if (
+      !title.trim() ||
+      !description.trim() ||
+      ingredients.length === 0 ||
+      instructions.length === 0 ||
+      !prepTime ||
+      !cookTime ||
+      !servings ||
+      !difficulty ||
+      !category
+    ) {
+      alert("Por favor completa todos los campos obligatorios.");
+      return;
+    }
 
-  // ✅ Validación de tipos
-  const prep = parseInt(prepTime);
-  const cook = parseInt(cookTime);
-  const serve = parseInt(servings);
+    // ✅ Validación de tipos
+    const prep = parseInt(prepTime);
+    const cook = parseInt(cookTime);
+    const serve = parseInt(servings);
 
-  if (isNaN(prep) || isNaN(cook) || isNaN(serve)) {
-    alert("Tiempo de preparación, cocción y porciones deben ser números.");
-    return;
-  }
+    if (isNaN(prep) || isNaN(cook) || isNaN(serve)) {
+      alert("Tiempo de preparación, cocción y porciones deben ser números.");
+      return;
+    }
 
-  // ✅ Construcción del FormData para incluir imagen
-  const formData = new FormData();
-  formData.append('title', title.trim());
-  formData.append('description', description.trim());
-  formData.append('ingredients', JSON.stringify(ingredients.map((ing) => ing.trim())));
-  formData.append('instructions', JSON.stringify(instructions.map((inst) => inst.trim())));
-  formData.append('prepTime', prep.toString());
-  formData.append('cookTime', cook.toString());
-  formData.append('servings', serve.toString());
-  formData.append('difficulty', difficulty);
-  formData.append('category', category);
-  formData.append('rating', '0');
-  
-  // Si hay imagen seleccionada, agregarla al FormData
-  if (selectedFile) {
-    formData.append('image', selectedFile);
-  }
+    setIsSubmitting(true);
 
-  console.log("🍳 Datos de la receta a enviar:", {
-    title, description, ingredients, instructions, prepTime: prep, cookTime: cook, servings: serve, difficulty, category, hasImage: !!selectedFile
-  });
-  console.log("🔑 Token disponible:", !!token);
+    // ✅ Construcción del FormData para incluir imagen
+    const formData = new FormData();
+    formData.append('title', title.trim());
+    formData.append('description', description.trim());
+    formData.append('ingredients', JSON.stringify(ingredients.map((ing) => ing.trim())));
+    formData.append('instructions', JSON.stringify(instructions.map((inst) => inst.trim())));
+    formData.append('prepTime', prep.toString());
+    formData.append('cookTime', cook.toString());
+    formData.append('servings', serve.toString());
+    formData.append('difficulty', difficulty);
+    formData.append('category', category);
+    
+    // Si hay imagen nueva seleccionada, agregarla al FormData
+    if (selectedFile) {
+      formData.append('image', selectedFile);
+    }
 
-  try {
-    const newRecipe = await fetchFromBackend("/recipes", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        // NO incluir Content-Type cuando usamos FormData, el browser lo configura automáticamente
-      },
-      body: formData, // Usar FormData en lugar de JSON
+    console.log("🍳 Datos de la receta a actualizar:", {
+      title, description, ingredients, instructions, prepTime: prep, cookTime: cook, servings: serve, difficulty, category, hasNewImage: !!selectedFile
     });
 
-    console.log("✅ Receta creada:", newRecipe);
-    setShowAlert(true);
-    
-    // Limpiar el formulario después de crear la receta
-    setTitle('');
-    setDescription('');
-    setIngredients([]);
-    setInstructions([]);
-    setPrepTime('');
-    setCookTime('');
-    setServings('');
-    setDifficulty('');
-    setCategory('');
-    setSelectedImage(null);
-    setSelectedFile(null);
-    
-    if (onRecipeUploaded) onRecipeUploaded();
-  } catch (error) {
-    console.error("❌ Error al crear receta:", error);
-    alert("Error al crear la receta. Por favor, intenta de nuevo.");
+    try {
+      const recipeId = recipe._id || recipe.id;
+      const updatedRecipe = await fetchFromBackend(`/recipes/${recipeId}`, {
+        method: "PUT",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          // NO incluir Content-Type cuando usamos FormData
+        },
+        body: formData,
+      });
+
+      console.log("✅ Receta actualizada:", updatedRecipe);
+      setShowAlert(true);
+      
+      // Esperar un momento para que el usuario vea el mensaje
+      setTimeout(() => {
+        if (onRecipeUpdated) {
+          // Enviar la receta actualizada que incluye la nueva imagen
+          onRecipeUpdated(updatedRecipe);
+        }
+        if (onClose) onClose();
+      }, 1500);
+      
+    } catch (error) {
+      console.error("❌ Error al actualizar receta:", error);
+      alert("Error al actualizar la receta. Por favor, intenta de nuevo.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (!recipe) {
+    return <div className="text-center p-8">No hay receta para editar.</div>;
   }
-};
-
-
 
   return (
     <>
       {showAlert && (
         <div className="bg-green-100 text-green-800 p-2 rounded mb-4 text-center font-semibold">
-          ✅ Receta cargada exitosamente
+          ✅ Receta actualizada exitosamente
         </div>
       )}
 
-      <main className="max-w-[1200px] mx-auto mt-8 px-5 grid gap-8 md:grid-cols-2">
+      <main className="max-w-[1200px] mx-auto px-5 grid gap-8 md:grid-cols-2">
         {/* Imagen */}
         <div className="bg-white rounded-lg shadow p-6 flex items-center justify-center relative min-h-[350px]">
           {selectedImage ? (
@@ -150,7 +171,7 @@ export default function CreateRecipeForm({ onRecipeUploaded }) {
               <button
                 type="button"
                 onClick={() => {
-                  setSelectedImage(null);
+                  setSelectedImage(recipe.imageUrl || null); // Volver a la imagen original si existe
                   setSelectedFile(null);
                 }}
                 className="absolute top-2 right-2 bg-red-500 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-red-600"
@@ -160,19 +181,19 @@ export default function CreateRecipeForm({ onRecipeUploaded }) {
             </>
           ) : (
             <div className="text-center">
-              <div className="text-6xl mb-4">�</div>
+              <div className="text-6xl mb-4">🍽️</div>
               <button
                 type="button"
                 onClick={handleUploadButtonClick}
                 className="px-6 py-3 bg-gradient-to-r from-pink-500 to-orange-500 text-white rounded-lg hover:from-pink-600 hover:to-orange-600 transition-colors"
               >
-                Subir imagen
+                {recipe.imageUrl ? 'Cambiar imagen' : 'Subir imagen'}
               </button>
               <p className="text-gray-500 mt-2">Opcional</p>
             </div>
           )}
           <input
-            id="imageUpload"
+            id="editImageUpload"
             type="file"
             accept="image/*"
             onChange={handleImageChange}
@@ -235,10 +256,20 @@ export default function CreateRecipeForm({ onRecipeUploaded }) {
           </div>
         </Section>
 
-        {/* Botón final */}
-        <div className="md:col-span-2 text-center mt-6">
-          <button onClick={handleSubmitRecipe} className="bg-[#FF8C42] text-white px-4 py-2 rounded hover:bg-[#e67c36] transition">
-            Subir receta
+        {/* Botones */}
+        <div className="md:col-span-2 text-center mt-6 flex gap-4 justify-center">
+          <button 
+            onClick={handleSubmitRecipe} 
+            disabled={isSubmitting}
+            className="bg-[#FF8C42] text-white px-6 py-2 rounded hover:bg-[#e67c36] transition disabled:opacity-50"
+          >
+            {isSubmitting ? 'Actualizando...' : 'Actualizar receta'}
+          </button>
+          <button 
+            onClick={onClose}
+            className="bg-gray-500 text-white px-6 py-2 rounded hover:bg-gray-600 transition"
+          >
+            Cancelar
           </button>
         </div>
       </main>
@@ -246,7 +277,7 @@ export default function CreateRecipeForm({ onRecipeUploaded }) {
   );
 }
 
-// Componentes reutilizables
+// Componentes reutilizables (copiados de create_recipe_form)
 const Input = ({ label, icon, ...props }) => (
   <div className="flex items-center gap-2 flex-1 min-w-[150px]">
     {label && <label className="block mb-2 font-semibold text-gray-800">{label}</label>}
