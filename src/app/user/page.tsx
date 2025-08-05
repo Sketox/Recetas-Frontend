@@ -30,33 +30,53 @@ export default function ProfilePage() {
     },
   ]);
 
-  const [setcreatedRecipes] = useState([
-    { id: 2, name: "Nombre del Plato", description: "Descripción del plato", imageUrl: null },
-  ]);
+  // 🎨 Array de colores de fondo para tarjetas sin imagen
+  const backgroundColors = [
+    'bg-gradient-to-br from-orange-400 to-orange-600',
+    'bg-gradient-to-br from-red-400 to-red-600',
+    'bg-gradient-to-br from-yellow-400 to-yellow-600',
+    'bg-gradient-to-br from-green-400 to-green-600',
+    'bg-gradient-to-br from-blue-400 to-blue-600',
+    'bg-gradient-to-br from-purple-400 to-purple-600',
+    'bg-gradient-to-br from-pink-400 to-pink-600',
+    'bg-gradient-to-br from-indigo-400 to-indigo-600',
+    'bg-gradient-to-br from-teal-400 to-teal-600',
+    'bg-gradient-to-br from-cyan-400 to-cyan-600',
+  ];
+
+  // 🎲 Función para obtener un color basado en el título (consistente)
+  const getBackgroundColor = (title: string) => {
+    let hash = 0;
+    for (let i = 0; i < title.length; i++) {
+      hash = title.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    return backgroundColors[Math.abs(hash) % backgroundColors.length];
+  };
 
   const IconComponent = getIconComponent(userIcon || "user-circle");
 
   useEffect(() => {
-  const fetchCreatedRecipes = async () => {
-    const token = localStorage.getItem("token");
-    if (!token) return;
+    const fetchCreatedRecipes = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
 
-    try {
-      const res = await fetch("/recipes/my-recipes", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      try {
+        const data = await fetchFromBackend("/recipes/my-recipes", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-      if (!res.ok) throw new Error("No se pudieron obtener las recetas");
+        console.log("📦 Recetas creadas:", data);
+        setCreatedRecipes(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error("Error al obtener recetas creadas:", error);
+      }
+    };
 
-      const data = await res.json();
-      setCreatedRecipes(data); // Aquí debes usar useState para manejar esto
-    } catch (error) {
-      console.error("Error al obtener recetas creadas:", error);
-    }
-  };
-
-  fetchCreatedRecipes();
-}, []);
+    fetchCreatedRecipes();
+  }, []);
 
   
 
@@ -120,11 +140,16 @@ useEffect(() => {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           {favoriteRecipes.map((recipe) => (
             <div key={recipe.id} className="border rounded-lg shadow-sm hover:shadow-md transition-shadow">
-              <div className="w-full h-32 bg-gray-200 flex items-center justify-center">
-                {recipe.imageUrl ? (
-                  <Image src={recipe.imageUrl} alt={recipe.name} width={200} height={128} className="object-cover w-full h-full" />
+              <div className="w-full h-32 rounded-t-lg flex items-center justify-center">
+                {recipe.imageUrl && recipe.imageUrl.trim() !== "" ? (
+                  <Image src={recipe.imageUrl} alt={recipe.name} width={200} height={128} className="object-cover w-full h-full rounded-t-lg" />
                 ) : (
-                  <span className="text-gray-500 text-sm">No hay imagen</span>
+                  <div className={`w-full h-full rounded-t-lg flex flex-col items-center justify-center text-white ${getBackgroundColor(recipe.name)}`}>
+                    <div className="text-3xl mb-1">🍽️</div>
+                    <span className="text-xs font-medium px-2 text-center opacity-90">
+                      {recipe.name.length > 15 ? recipe.name.substring(0, 15) + '...' : recipe.name}
+                    </span>
+                  </div>
                 )}
               </div>
               <div className="p-4">
@@ -139,24 +164,33 @@ useEffect(() => {
       <section className="bg-white shadow-md mx-auto max-w-4xl rounded-lg mt-8 p-6">
         <h2 className="text-2xl font-bold text-gray-900 mb-6">Recetas Creadas</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {createdRecipes.map((recipe) => (
-            <div key={recipe.id} className="border rounded-lg shadow-sm hover:shadow-md transition-shadow">
-              <div className="w-full h-32 bg-gray-200 flex items-center justify-center relative">
-                {recipe.imageUrl ? (
-                  <Image src={recipe.imageUrl} alt={recipe.name} width={200} height={128} className="object-cover w-full h-full" />
-                ) : (
-                  <span className="text-gray-500 text-sm">No hay imagen</span>
-                )}
-                <button className="absolute top-2 right-2 bg-white rounded-full p-1 shadow hover:bg-gray-100 transition-colors">
-                  <FaEdit className="text-gray-600 w-4 h-4" />
-                </button>
+          {createdRecipes.length > 0 ? (
+            createdRecipes.map((recipe) => (
+              <div key={recipe.id} className="border rounded-lg shadow-sm hover:shadow-md transition-shadow">
+                <div className="w-full h-32 rounded-t-lg flex items-center justify-center relative">
+                  {recipe.imageUrl && recipe.imageUrl.trim() !== "" ? (
+                    <Image src={recipe.imageUrl} alt={recipe.title} width={200} height={128} className="object-cover w-full h-full rounded-t-lg" />
+                  ) : (
+                    <div className={`w-full h-full rounded-t-lg flex flex-col items-center justify-center text-white ${getBackgroundColor(recipe.title)}`}>
+                      <div className="text-3xl mb-1">🍽️</div>
+                      <span className="text-xs font-medium px-2 text-center opacity-90">
+                        {recipe.title.length > 15 ? recipe.title.substring(0, 15) + '...' : recipe.title}
+                      </span>
+                    </div>
+                  )}
+                  <button className="absolute top-2 right-2 bg-white rounded-full p-1 shadow hover:bg-gray-100 transition-colors">
+                    <FaEdit className="text-gray-600 w-4 h-4" />
+                  </button>
+                </div>
+                <div className="p-4">
+                  <h3 className="font-semibold text-gray-800 text-lg">{recipe.title}</h3>
+                  <p className="text-gray-500 text-sm">{recipe.description}</p>
+                </div>
               </div>
-              <div className="p-4">
-                <h3 className="font-semibold text-gray-800 text-lg">{recipe.name}</h3>
-                <p className="text-gray-500 text-sm">{recipe.description}</p>
-              </div>
-            </div>
-          ))}
+            ))
+          ) : (
+            <p className="text-gray-500 col-span-full text-center">No has creado ninguna receta aún.</p>
+          )}
         </div>
       </section>
     </main>

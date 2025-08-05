@@ -1,33 +1,25 @@
+import { fetchFromBackend } from "../services/index";
+
 export async function fetchRecipesFromAI(message) {
-  const res = await fetch("http://localhost:5000/api/ai/chat", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message }),
-  });
-
-  const data = await res.json();
-  return data.recipes;
+  try {
+    const data = await fetchFromBackend("/ai/chat", {
+      method: "POST",
+      body: JSON.stringify({ message }),
+    });
+    return data.recipes;
+  } catch (error) {
+    console.error("Error fetching AI recipes:", error);
+    return [];
+  }
 }
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
 
 // Obtener todas las recetas
 export const getRecipes = async () => {
   try {
-    const token = localStorage.getItem("authToken"); // donde guardaste el token
-    const response = await fetch("http://localhost:5000/api/recipes", {
+    const data = await fetchFromBackend("/recipes", {
       method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
     });
-
-    if (!response.ok) {
-      throw new Error("Error al obtener recetas");
-    }
-
-    return await response.json();
+    return data;
   } catch (error) {
     console.error("Error en getRecipes:", error);
     return [];
@@ -37,17 +29,18 @@ export const getRecipes = async () => {
 
 // Crear una receta nueva
 export async function createRecipe(recipe) {
-  const res = await fetch(`${API_URL}/recipes`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(recipe),
-  });
-
-  if (!res.ok) {
-    throw new Error("Error al crear la receta");
+  try {
+    const token = localStorage.getItem("token");
+    const data = await fetchFromBackend("/recipes", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(recipe),
+    });
+    return data;
+  } catch (error) {
+    console.error("Error al crear la receta:", error);
+    throw error;
   }
-
-  return res.json();
 }

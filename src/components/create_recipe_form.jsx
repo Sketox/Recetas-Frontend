@@ -1,5 +1,7 @@
 'use client';
 import React, { useState } from 'react';
+import { fetchFromBackend } from "@/services/index";
+
 
 export default function CreateRecipeForm({ onRecipeUploaded }) {
   const [selectedImage, setSelectedImage] = useState(null);
@@ -12,6 +14,7 @@ export default function CreateRecipeForm({ onRecipeUploaded }) {
   const [prepTime, setPrepTime] = useState('');
   const [cookTime, setCookTime] = useState('');
   const [difficulty, setDifficulty] = useState('');
+  const [category, setCategory] = useState('');
   const [servings, setServings] = useState('');
 
   const [showAlert, setShowAlert] = useState(false);
@@ -54,7 +57,8 @@ export default function CreateRecipeForm({ onRecipeUploaded }) {
     !prepTime ||
     !cookTime ||
     !servings ||
-    !difficulty
+    !difficulty ||
+    !category
   ) {
     alert("Por favor completa todos los campos obligatorios.");
     return;
@@ -80,29 +84,42 @@ export default function CreateRecipeForm({ onRecipeUploaded }) {
     cookTime: cook,
     servings: serve,
     difficulty,
-    category: "General",
-    imageUrl: selectedImage || "",
+    category,
+    imageUrl: "", // 🚧 Temporalmente vacío hasta implementar correctamente
     rating: 0,
   };
 
+  console.log("🍳 Datos de la receta a enviar:", recipeData);
+  console.log("🔑 Token disponible:", !!token);
+
   try {
-    const res = await fetch("http://localhost:5000/api/recipes", {
+    const newRecipe = await fetchFromBackend("/recipes", {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify(recipeData),
     });
 
-    if (!res.ok) throw new Error("Error al crear receta");
-
-    const newRecipe = await res.json();
     console.log("✅ Receta creada:", newRecipe);
     setShowAlert(true);
+    
+    // Limpiar el formulario después de crear la receta
+    setTitle('');
+    setDescription('');
+    setIngredients([]);
+    setInstructions([]);
+    setPrepTime('');
+    setCookTime('');
+    setServings('');
+    setDifficulty('');
+    setCategory('');
+    // setSelectedImage(null); // 🚧 Comentado temporalmente
+    
     if (onRecipeUploaded) onRecipeUploaded();
   } catch (error) {
     console.error("❌ Error al crear receta:", error);
+    alert("Error al crear la receta. Por favor, intenta de nuevo.");
   }
 };
 
@@ -119,6 +136,15 @@ export default function CreateRecipeForm({ onRecipeUploaded }) {
       <main className="max-w-[1200px] mx-auto mt-8 px-5 grid gap-8 md:grid-cols-2">
         {/* Imagen */}
         <div className="bg-white rounded-lg shadow p-6 flex items-center justify-center relative min-h-[350px]">
+          {/* 🚧 TEMPORALMENTE DESHABILITADO - COMING SOON */}
+          <div className="text-center">
+            <div className="text-6xl mb-4">🚧</div>
+            <h3 className="text-xl font-bold text-gray-700 mb-2">Carga de imágenes</h3>
+            <p className="text-gray-500">No disponible por ahora... coming soon</p>
+          </div>
+          
+          {/* 
+          TODO: Reactivar cuando se implemente correctamente el manejo de imágenes
           {selectedImage ? (
             <>
               <img src={selectedImage} alt="Vista previa" className="max-h-full max-w-full object-cover rounded-lg" />
@@ -132,15 +158,17 @@ export default function CreateRecipeForm({ onRecipeUploaded }) {
             </button>
           )}
           <input type="file" id="imageUpload" className="hidden" accept="image/*" onChange={handleImageChange} />
+          */}
         </div>
 
         {/* Datos básicos */}
         <div className="bg-white rounded-lg shadow p-6 space-y-5">
           <Input label="Nombre de la receta" value={title} onChange={(e) => setTitle(e.target.value)} />
           <Textarea label="Descripción de la receta" value={description} onChange={(e) => setDescription(e.target.value)} />
-          <Input icon="⏱️" placeholder="Preparación" value={prepTime} onChange={(e) => setPrepTime(e.target.value)} />
-          <Input icon="🔥" placeholder="Cocción" value={cookTime} onChange={(e) => setCookTime(e.target.value)} />
-          <Select icon="⚙️" options={['Fácil', 'Media', 'Difícil']} value={difficulty} onChange={(e) => setDifficulty(e.target.value)} />
+          <Input icon="⏱️" placeholder="Preparación (min)" value={prepTime} onChange={(e) => setPrepTime(e.target.value)} />
+          <Input icon="🔥" placeholder="Cocción (min)" value={cookTime} onChange={(e) => setCookTime(e.target.value)} />
+          <Select icon="⚙️" options={['Fácil', 'Intermedio', 'Difícil']} value={difficulty} onChange={(e) => setDifficulty(e.target.value)} placeholder="Dificultad" />
+          <Select icon="🍽️" options={['Desayuno', 'Almuerzo', 'Cena', 'Postre', 'Snack']} value={category} onChange={(e) => setCategory(e.target.value)} placeholder="Categoría" />
           <Input icon="👥" type="number" placeholder="Porciones" value={servings} onChange={(e) => setServings(e.target.value)} />
         </div>
 
@@ -215,12 +243,17 @@ const Textarea = ({ label, ...props }) => (
   </div>
 );
 
-const Select = ({ icon, options }) => (
+const Select = ({ icon, options, value, onChange, placeholder = "Seleccionar..." }) => (
   <div className="flex items-center gap-2 flex-1 min-w-[150px]">
     {icon && <span className="text-xl text-gray-600">{icon}</span>}
-    <select className="w-full p-2 border border-gray-300 rounded text-base outline-none focus:border-[#FF8C42]">
+    <select 
+      className="w-full p-2 border border-gray-300 rounded text-base outline-none focus:border-[#FF8C42]"
+      value={value}
+      onChange={onChange}
+    >
+      <option value="">{placeholder}</option>
       {options.map((opt, i) => (
-        <option key={i}>{opt}</option>
+        <option key={i} value={opt}>{opt}</option>
       ))}
     </select>
   </div>

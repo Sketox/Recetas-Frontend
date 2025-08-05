@@ -43,10 +43,14 @@ export default function HomePage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        console.log("🔄 Cargando recetas...");
         const data = await getRecipes();
+        console.log("✅ Recetas cargadas:", data);
         setRecipes(data);
       } catch (error) {
-        console.error(error);
+        console.error("❌ Error al cargar recetas:", error);
+        // No mostrar error si no hay recetas, simplemente mantener array vacío
+        setRecipes([]);
       } finally {
         setLoading(false);
       }
@@ -57,9 +61,17 @@ export default function HomePage() {
 
   const handleSend = async () => {
     if (input.trim() === "") return;
-    const res = await fetchRecipesFromAI(input);
-    setRecipes(res);
-    setInput("");
+    
+    try {
+      console.log("🔄 Consultando IA con:", input);
+      const res = await fetchRecipesFromAI(input);
+      console.log("✅ Respuesta de IA:", res);
+      setRecipes(res);
+      setInput("");
+    } catch (error) {
+      console.error("❌ Error al consultar IA:", error);
+      // Mantener las recetas actuales en caso de error
+    }
   };
 
   const handleViewRecipe = (index: number) => {

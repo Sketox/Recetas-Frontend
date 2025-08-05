@@ -40,6 +40,7 @@ export default function RecipesPage() {
             cache: "no-store",
           });
 
+          console.log("📦 Todas las recetas:", data);
           setRecipes(data);
           setFilteredRecipes(data);
         } catch (error) {
