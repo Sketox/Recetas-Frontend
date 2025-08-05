@@ -127,7 +127,18 @@ export default function CreateRecipeForm({ onRecipeUploaded }) {
     if (onRecipeUploaded) onRecipeUploaded();
   } catch (error) {
     console.error("❌ Error al crear receta:", error);
-    alert("Error al crear la receta. Por favor, intenta de nuevo.");
+    
+    // Mostrar diferentes mensajes según el tipo de error
+    if (error.message.includes('500')) {
+      alert("Error interno del servidor. Verifica que el backend esté funcionando correctamente.");
+    } else if (error.message.includes('401')) {
+      alert("Tu sesión ha expirado. Por favor, inicia sesión nuevamente.");
+      localStorage.removeItem("token");
+    } else if (error.message.includes('400')) {
+      alert("Datos inválidos. Verifica que todos los campos estén completos y sean correctos.");
+    } else {
+      alert(`Error al crear la receta: ${error.message}`);
+    }
   }
 };
 
