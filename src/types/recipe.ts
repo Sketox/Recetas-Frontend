@@ -13,6 +13,10 @@ export interface Recipe {
   imageUrl: string;
   rating: number;
   userId?: string;
+  author?: {
+    name: string;
+    icon: string;
+  } | null;
   createdAt: string;
   updatedAt: string;
 }

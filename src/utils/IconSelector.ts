@@ -13,6 +13,10 @@ export const availableIcons = [
 ];
 
 export function formatIconName(iconName: string): keyof typeof Icons {
+  if (!iconName || typeof iconName !== 'string') {
+    return "UserCircleIcon";
+  }
+  
   const formatted = iconName
     .split("-")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
@@ -22,6 +26,10 @@ export function formatIconName(iconName: string): keyof typeof Icons {
 }
 
 export function getIconComponent(iconName: string) {
+  if (!iconName || typeof iconName !== 'string') {
+    return Icons.UserCircleIcon;
+  }
+  
   const formattedName = formatIconName(iconName);
   return Icons[formattedName] || Icons.UserCircleIcon;
 }

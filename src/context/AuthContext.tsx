@@ -42,8 +42,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     router.push("/");
   };
 
+  const updateUserIcon = (icon: string) => {
+    localStorage.setItem("userIcon", icon);
+    setUserIcon(icon);
+  };
+
   return (
-    <AuthContext.Provider value={{ isAuthenticated, userIcon, login, logout, setUserIcon }}>
+    <AuthContext.Provider value={{ isAuthenticated, userIcon, login, logout, setUserIcon: updateUserIcon }}>
       {children}
     </AuthContext.Provider>
   );

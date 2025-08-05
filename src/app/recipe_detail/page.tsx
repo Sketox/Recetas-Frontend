@@ -5,11 +5,15 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Recipe } from "@/types/recipe";
 import { fetchFromBackend } from "@/services/index";
+import Modal from "@/components/modal";
+import EditRecipeForm from "@/components/edit_recipe_form";
 
 export default function RecipeDetailPage() {
   const [recipe, setRecipe] = useState<Recipe | null>(null);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [isOwner, setIsOwner] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [recipeToEdit, setRecipeToEdit] = useState<any>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -58,9 +62,20 @@ export default function RecipeDetailPage() {
   }, [recipe, currentUser]);
 
   const handleEditRecipe = () => {
-    // Redirigir a una página de edición (crearemos esto)
-    localStorage.setItem("editingRecipe", JSON.stringify(recipe));
-    router.push("/edit-recipe");
+    setRecipeToEdit(recipe);
+    setEditModalOpen(true);
+  };
+
+  const handleRecipeUpdated = async (updatedRecipe: any) => {
+    console.log("🔄 Actualizando receta:", updatedRecipe);
+    
+    // Actualizar la receta actual
+    setRecipe(updatedRecipe);
+    localStorage.setItem("selectedRecipe", JSON.stringify(updatedRecipe));
+    
+    // Cerrar el modal
+    setEditModalOpen(false);
+    setRecipeToEdit(null);
   };
 
   const handleDeleteRecipe = async () => {
@@ -98,115 +113,203 @@ export default function RecipeDetailPage() {
   const totalTime = (recipe.prepTime || 0) + (recipe.cookTime || 0);
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8">
-      {/* Título y botones de editar/eliminar */}
-      <div className="flex justify-between items-start mb-4">
-        <div>
-          <h1 className="text-3xl font-bold mb-2">{recipe.title}</h1>
-          <p className="text-gray-600">{recipe.description}</p>
-        </div>
-        {isOwner && (
-          <div className="flex gap-2">
-            <button
-              onClick={handleEditRecipe}
-              className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
-            >
-              ✏️ Editar
-            </button>
-            <button
-              onClick={handleDeleteRecipe}
-              className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors flex items-center gap-2"
-            >
-              🗑️ Eliminar
-            </button>
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50">
+      <div className="max-w-6xl mx-auto px-4 py-12">
+        {/* Header con título y botones de acción */}
+        <div className="bg-white rounded-2xl shadow-lg p-8 mb-8 border border-gray-100">
+          <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-6">
+            <div className="flex-1">
+              <h1 className="text-4xl font-bold text-gray-900 mb-4 bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
+                {recipe.title}
+              </h1>
+              <p className="text-lg text-gray-600 leading-relaxed">{recipe.description}</p>
+              
+              {/* Información del autor */}
+              {recipe.author ? (
+                <div className="flex items-center mt-4 p-3 bg-orange-50 rounded-xl border border-orange-100">
+                  <div className="w-8 h-8 mr-3 text-orange-500 flex items-center justify-center">
+                    👨‍🍳
+                  </div>
+                  <span className="font-medium text-gray-700">Receta creada por {recipe.author.name}</span>
+                </div>
+              ) : (
+                <div className="flex items-center mt-4 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                  <div className="w-8 h-8 mr-3 text-gray-500 flex items-center justify-center">🏠</div>
+                  <span className="font-medium text-gray-700">Receta de Cooksy</span>
+                </div>
+              )}
+            </div>
+            
+            {isOwner && (
+              <div className="flex gap-3">
+                <button
+                  onClick={handleEditRecipe}
+                  className="flex items-center gap-2 px-6 py-3 bg-blue-500 text-white rounded-xl hover:bg-blue-600 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                >
+                  <span className="text-lg">✏️</span>
+                  <span className="font-semibold">Editar</span>
+                </button>
+                <button
+                  onClick={handleDeleteRecipe}
+                  className="flex items-center gap-2 px-6 py-3 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                >
+                  <span className="text-lg">🗑️</span>
+                  <span className="font-semibold">Eliminar</span>
+                </button>
+              </div>
+            )}
           </div>
-        )}
-      </div>
+        </div>
 
-      {/* Imagen */}
-      <div className="relative w-full h-64 md:h-80 rounded-lg overflow-hidden shadow-md mb-6">
-        {recipe.imageUrl && recipe.imageUrl.trim() !== "" ? (
-          <Image
-            src={recipe.imageUrl}
-            alt={recipe.title}
-            fill
-            className="object-cover"
-          />
-        ) : (
-          <div className="w-full h-full bg-gradient-to-br from-orange-400 to-orange-600 flex flex-col items-center justify-center text-white">
-            <div className="text-6xl mb-4">🍽️</div>
-            <h2 className="text-2xl font-bold">{recipe.title}</h2>
+        {/* Imagen principal modernizada */}
+        <div className="relative w-full h-80 md:h-96 rounded-2xl overflow-hidden shadow-xl mb-8">
+          {recipe.imageUrl && recipe.imageUrl.trim() !== "" ? (
+            <Image
+              src={recipe.imageUrl}
+              alt={recipe.title}
+              fill
+              className="object-cover"
+            />
+          ) : (
+            <div className="w-full h-full bg-gradient-to-br from-orange-400 via-orange-500 to-amber-600 flex flex-col items-center justify-center text-white">
+              <div className="text-8xl mb-6">🍽️</div>
+              <h2 className="text-3xl font-bold text-center px-4">{recipe.title}</h2>
+            </div>
+          )}
+          
+          {/* Overlay con información rápida */}
+          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-6">
+            <div className="flex items-center justify-between text-white">
+              <div className="flex items-center gap-4">
+                <span className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-medium">
+                  {recipe.category}
+                </span>
+                <span className="bg-white/20 backdrop-blur-sm px-3 py-1 rounded-full text-sm font-medium">
+                  ⭐ {recipe.rating}
+                </span>
+              </div>
+              <div className="text-right">
+                <div className="text-sm opacity-90">Tiempo total</div>
+                <div className="text-lg font-bold">{totalTime} min</div>
+              </div>
+            </div>
           </div>
-        )}
-      </div>
-
-      {/* Info principal */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-6 text-center">
-        <div className="bg-gray-50 rounded-lg p-3 shadow">
-          <p className="text-blue-500 text-lg">⏱</p>
-          <p className="text-sm text-gray-500">Preparación</p>
-          <p className="font-semibold">{recipe.prepTime} min</p>
-        </div>
-        <div className="bg-gray-50 rounded-lg p-3 shadow">
-          <p className="text-orange-500 text-lg">🔥</p>
-          <p className="text-sm text-gray-500">Cocción</p>
-          <p className="font-semibold">{recipe.cookTime} min</p>
-        </div>
-        <div className="bg-gray-50 rounded-lg p-3 shadow">
-          <p className="text-green-500 text-lg">👥</p>
-          <p className="text-sm text-gray-500">Porciones</p>
-          <p className="font-semibold">{recipe.servings}</p>
-        </div>
-        <div className="bg-gray-50 rounded-lg p-3 shadow">
-          <p className="text-pink-500 text-lg">📈</p>
-          <p className="text-sm text-gray-500">Dificultad</p>
-          <p className="font-semibold">{recipe.difficulty}</p>
-        </div>
-        <div className="bg-gray-50 rounded-lg p-3 shadow">
-          <p className="text-yellow-500 text-lg">⭐</p>
-          <p className="text-sm text-gray-500">Valoración</p>
-          <p className="font-semibold">{recipe.rating}</p>
-        </div>
-      </div>
-
-      {/* Etiquetas */}
-      <div className="flex items-center gap-2 mb-6">
-        <span className="bg-blue-100 text-blue-600 px-3 py-1 rounded-full text-sm">
-          {recipe.category}
-        </span>
-        <p className="text-gray-400 text-sm">
-          Creado: {new Date(recipe.createdAt).toLocaleDateString("es-ES", {
-            day: "2-digit",
-            month: "long",
-            year: "numeric",
-          })}
-        </p>
-      </div>
-
-      {/* Ingredientes e instrucciones */}
-      <div className="grid md:grid-cols-2 gap-6">
-        {/* Ingredientes */}
-        <div className="bg-white shadow rounded-lg p-4">
-          <h3 className="font-semibold text-lg mb-3">Ingredientes</h3>
-          <ul className="space-y-2 text-gray-700">
-            {recipe.ingredients.map((item, index) => (
-              <li key={index} className="flex items-center gap-2">
-                ✅ {item}
-              </li>
-            ))}
-          </ul>
         </div>
 
-        {/* Instrucciones */}
-        <div className="bg-white shadow rounded-lg p-4">
-          <h3 className="font-semibold text-lg mb-3">Instrucciones</h3>
-          <ol className="space-y-3 text-gray-700 list-decimal list-inside">
-            {recipe.instructions.map((step, index) => (
-              <li key={index}>{step}</li>
-            ))}
-          </ol>
+        {/* Estadísticas modernizadas */}
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-8">
+          <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 text-center transform hover:scale-105 transition-all duration-200">
+            <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <span className="text-2xl">⏱</span>
+            </div>
+            <p className="text-sm text-gray-500 mb-1">Preparación</p>
+            <p className="text-xl font-bold text-gray-900">{recipe.prepTime} min</p>
+          </div>
+          
+          <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 text-center transform hover:scale-105 transition-all duration-200">
+            <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <span className="text-2xl">🔥</span>
+            </div>
+            <p className="text-sm text-gray-500 mb-1">Cocción</p>
+            <p className="text-xl font-bold text-gray-900">{recipe.cookTime} min</p>
+          </div>
+          
+          <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 text-center transform hover:scale-105 transition-all duration-200">
+            <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <span className="text-2xl">👥</span>
+            </div>
+            <p className="text-sm text-gray-500 mb-1">Porciones</p>
+            <p className="text-xl font-bold text-gray-900">{recipe.servings}</p>
+          </div>
+          
+          <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 text-center transform hover:scale-105 transition-all duration-200">
+            <div className="w-12 h-12 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <span className="text-2xl">📈</span>
+            </div>
+            <p className="text-sm text-gray-500 mb-1">Dificultad</p>
+            <p className="text-xl font-bold text-gray-900">{recipe.difficulty}</p>
+          </div>
+          
+          <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 text-center transform hover:scale-105 transition-all duration-200">
+            <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-3">
+              <span className="text-2xl">⭐</span>
+            </div>
+            <p className="text-sm text-gray-500 mb-1">Valoración</p>
+            <p className="text-xl font-bold text-gray-900">{recipe.rating}</p>
+          </div>
+        </div>
+
+        {/* Información adicional modernizada */}
+        <div className="flex flex-wrap items-center gap-4 mb-8">
+          <span className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg">
+            {recipe.category}
+          </span>
+          <div className="flex items-center gap-2 text-gray-500">
+            <span className="text-lg">📅</span>
+            <span className="text-sm font-medium">
+              Creado el {new Date(recipe.createdAt).toLocaleDateString("es-ES", {
+                day: "2-digit",
+                month: "long",
+                year: "numeric",
+              })}
+            </span>
+          </div>
+        </div>
+
+        {/* Ingredientes e instrucciones modernizadas */}
+        <div className="grid lg:grid-cols-2 gap-8">
+          {/* Ingredientes */}
+          <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                <span className="text-xl">🛒</span>
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900">Ingredientes</h3>
+            </div>
+            
+            <div className="space-y-3">
+              {recipe.ingredients.map((item, index) => (
+                <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors duration-200">
+                  <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-white text-sm">✓</span>
+                  </div>
+                  <span className="text-gray-700 font-medium">{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Instrucciones */}
+          <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
+                <span className="text-xl">👨‍🍳</span>
+              </div>
+              <h3 className="text-2xl font-bold text-gray-900">Instrucciones</h3>
+            </div>
+            
+            <div className="space-y-4">
+              {recipe.instructions.map((step, index) => (
+                <div key={index} className="flex gap-4">
+                  <div className="w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center flex-shrink-0 font-bold">
+                    {index + 1}
+                  </div>
+                  <p className="text-gray-700 leading-relaxed pt-1">{step}</p>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* Modal para editar receta */}
+      <Modal isOpen={editModalOpen} onClose={() => setEditModalOpen(false)}>
+        <EditRecipeForm 
+          recipe={recipeToEdit}
+          onRecipeUpdated={handleRecipeUpdated}
+          onClose={() => setEditModalOpen(false)}
+        />
+      </Modal>
     </div>
   );
 }

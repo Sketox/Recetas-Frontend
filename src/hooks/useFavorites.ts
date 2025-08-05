@@ -72,6 +72,12 @@ export const useFavorites = () => {
             Authorization: `Bearer ${token}`,
           },
         });
+        
+        // Actualizar la lista de favoritos localmente
+        setFavoriteRecipes(prev => prev.filter(recipe => 
+          (recipe._id || recipe.id) !== recipeId
+        ));
+        
         return false;
       } else {
         await fetchFromBackend("/favorites", {
@@ -81,13 +87,17 @@ export const useFavorites = () => {
           },
           body: JSON.stringify({ recipeId }),
         });
+        
+        // Refrescar la lista de favoritos
+        fetchFavorites();
+        
         return true;
       }
     } catch (error) {
       console.error("Error toggling favorite:", error);
       throw error;
     }
-  }, []);
+  }, [fetchFavorites]);
 
   return {
     favoriteRecipes,

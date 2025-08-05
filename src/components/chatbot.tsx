@@ -41,15 +41,12 @@ export default function Chatbot() {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/chat", {
+      const { fetchFromBackend } = await import("@/services/index");
+      
+      const data = await fetchFromBackend("/ai/chat", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
         body: JSON.stringify({ message: text }),
-      });
-
-      const data = await response.json();
+      }) as any;
 
       if (data.success && data.recipes) {
         const aiReply = data.recipes

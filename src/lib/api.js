@@ -26,6 +26,19 @@ export const getRecipes = async () => {
   }
 };
 
+// Obtener categorías con conteos
+export const getCategories = async () => {
+  try {
+    const data = await fetchFromBackend("/recipes/categories", {
+      method: "GET",
+    });
+    return data;
+  } catch (error) {
+    console.error("Error en getCategories:", error);
+    return [];
+  }
+};
+
 
 // Crear una receta nueva
 export async function createRecipe(recipe) {

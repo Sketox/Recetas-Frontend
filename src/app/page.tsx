@@ -7,19 +7,11 @@ import EditorCarousel from "../components/Carousel";
 import RecipeCard from "../components/recipeCard";
 import CategoryCard from "../components/category";
 import CTA from "../components/CTA";
-import { fetchRecipesFromAI, getRecipes } from "../lib/api";
+import { fetchRecipesFromAI, getRecipes, getCategories } from "../lib/api";
 import Modal from '../components/modal';
 import CreateRecipeForm from '../components/create_recipe_form';
 import ChatWidget from "@/components/ChatWidget";
 import useTokenValidation from "@/hooks/useTokenValidation";
-
-const categories = [
-  { icon: "🥐", name: "Desayuno", count: 1 },
-  { icon: "🍴", name: "Almuerzo", count: 13 },
-  { icon: "🍝", name: "Cena", count: 0 },
-  { icon: "🍰", name: "Postre", count: 5 },
-  { icon: "🍪", name: "Snack", count: 1 },
-];
 
 export default function HomePage() {
   useTokenValidation(); // ✅ Validar tokens automáticamente
@@ -28,6 +20,7 @@ export default function HomePage() {
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [input, setInput] = useState("");
   const [recipes, setRecipes] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
@@ -46,14 +39,20 @@ export default function HomePage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        console.log("🔄 Cargando recetas...");
-        const data = await getRecipes();
-        console.log("✅ Recetas cargadas:", data);
-        setRecipes(data);
+        console.log("🔄 Cargando recetas y categorías...");
+        const [recipesData, categoriesData] = await Promise.all([
+          getRecipes(),
+          getCategories()
+        ]);
+        console.log("✅ Recetas cargadas:", recipesData);
+        console.log("✅ Categorías cargadas:", categoriesData);
+        setRecipes(recipesData);
+        setCategories(categoriesData);
       } catch (error) {
-        console.error("❌ Error al cargar recetas:", error);
-        // No mostrar error si no hay recetas, simplemente mantener array vacío
+        console.error("❌ Error al cargar datos:", error);
+        // No mostrar error si no hay recetas, simplemente mantener arrays vacíos
         setRecipes([]);
+        setCategories([]);
       } finally {
         setLoading(false);
       }
@@ -97,48 +96,73 @@ export default function HomePage() {
       <EditorCarousel />
 
       {/* Recetas Destacadas dinámicas */}
-      <section className="max-w-7xl mx-auto px-4 py-10">
-        <h2 className="text-2xl font-semibold mb-6">Recetas Destacadas</h2>
+      <section className="max-w-7xl mx-auto px-4 py-16">
+        <div className="text-center mb-12">
+          <h2 className="text-4xl font-bold text-gray-900 mb-4">Recetas Destacadas</h2>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Descubre las mejores recetas seleccionadas especialmente para ti
+          </p>
+        </div>
+        
         {loading ? (
-          <p>Cargando...</p>
+          <div className="flex justify-center items-center py-20">
+            <div className="relative">
+              <div className="w-16 h-16 border-4 border-orange-200 rounded-full animate-spin border-t-orange-500"></div>
+              <div className="mt-4 text-center text-gray-600">Cargando recetas...</div>
+            </div>
+          </div>
         ) : recipes.length > 0 ? (
-          <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-          {recipes.slice(0, 4).map((r, i) => (
-            <RecipeCard
-              key={r._id || r.id || i}
-              recipeId={r._id || r.id}
-              title={r.title}
-              description={r.description}
-              imageUrl={r.imageUrl}
-              time={(r.prepTime || 0) + (r.cookTime || 0)}
-              difficulty={r.difficulty}
-              rating={r.rating}
-              onViewRecipe={() => {
-                localStorage.setItem("selectedRecipe", JSON.stringify(r)); // ✅ Guardar receta
-                router.push("/recipe_detail"); // ✅ Redirigir
-              }}
-            />
-          ))}
-
+          <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+            {recipes.slice(0, 4).map((r, i) => (
+              <div key={r._id || r.id || i} className="transform hover:scale-105 transition-all duration-300">
+                <RecipeCard
+                  recipeId={r._id || r.id}
+                  title={r.title}
+                  description={r.description}
+                  imageUrl={r.imageUrl}
+                  time={(r.prepTime || 0) + (r.cookTime || 0)}
+                  difficulty={r.difficulty}
+                  rating={r.rating}
+                  author={r.author}
+                  onViewRecipe={() => {
+                    localStorage.setItem("selectedRecipe", JSON.stringify(r));
+                    router.push("/recipe_detail");
+                  }}
+                />
+              </div>
+            ))}
           </div>
         ) : (
-          <p>No hay recetas disponibles</p>
+          <div className="text-center py-20">
+            <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">
+              <span className="text-4xl">🍽️</span>
+            </div>
+            <h3 className="text-xl font-semibold text-gray-700 mb-2">No hay recetas disponibles</h3>
+            <p className="text-gray-500">Sé el primero en compartir una deliciosa receta</p>
+          </div>
         )}
       </section>
 
-      <section className="max-w-7xl mx-auto px-4 py-10">
-        <h2 className="text-2xl font-semibold mb-6">Categorías</h2>
-        <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+      <section className="max-w-7xl mx-auto px-4 py-16">
+        <div className="text-center mb-12">
+          <h2 className="text-4xl font-bold text-gray-900 mb-4">Explora por Categorías</h2>
+          <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+            Encuentra exactamente lo que buscas navegando por nuestras categorías
+          </p>
+        </div>
+        
+        <div className="grid gap-6 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
           {categories.map((c, i) => (
-            <CategoryCard
-              key={i}
-              {...c}
-              isActive={selectedCategory === c.name}
-              onClick={() => {
-                setSelectedCategory(c.name); 
-                router.push(`/recipes?category=${encodeURIComponent(c.name)}`);
-              }}
-            />
+            <div key={i} className="transform hover:scale-105 transition-all duration-300">
+              <CategoryCard
+                {...c}
+                isActive={selectedCategory === c.name}
+                onClick={() => {
+                  setSelectedCategory(c.name); 
+                  router.push(`/recipes?category=${encodeURIComponent(c.name)}`);
+                }}
+              />
+            </div>
           ))}
         </div>
       </section>
