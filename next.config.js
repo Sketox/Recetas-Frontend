@@ -9,26 +9,6 @@ const nextConfig = {
   images: {
     domains: ['ejemplo.com', 'res.cloudinary.com'],
   },
-  // 🚀 Configuraciones para evitar problemas de pre-rendering
-  experimental: {
-    missingSuspenseWithCSRBailout: false,
-  },
-  // 🚀 Configuración de generación estática
-  generateStaticParams: false,
-  // 🚀 Forzar renderizado dinámico para rutas problemáticas
-  async headers() {
-    return [
-      {
-        source: '/recipes/:path*',
-        headers: [
-          {
-            key: 'Cache-Control',
-            value: 'no-cache, no-store, must-revalidate',
-          },
-        ],
-      },
-    ];
-  },
 };
 
 module.exports = nextConfig;
