@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { FaTwitter, FaLinkedin } from 'react-icons/fa';
 
 const AboutUsPage = () => {
@@ -53,7 +54,7 @@ const AboutUsPage = () => {
         <section className="bg-[#FF8C42] text-white py-12 px-4">
           <h1 className="text-4xl font-bold mb-4">Sobre Nosotros</h1>
           <p className="max-w-2xl mx-auto text-base font-medium">
-            We're a dynamic group of individuals who are passionate about what we do and dedicated to delivering the best results for our clients.
+            We&apos;re a dynamic group of individuals who are passionate about what we do and dedicated to delivering the best results for our clients.
           </p>
         </section>
 
@@ -64,9 +65,11 @@ const AboutUsPage = () => {
               
               <div key={index} className="flex flex-col items-center text-center">
                 <div className="w-40 h-40 mb-5 overflow-hidden rounded-full border border-gray-300">
-                <img
+                <Image
                   src={member.image}
                   alt={member.name}
+                  width={160}
+                  height={160}
                   className="w-full h-full object-cover transition-transform duration-300 ease-in-out hover:brightness-110 hover:scale-105"
                 />
               </div>

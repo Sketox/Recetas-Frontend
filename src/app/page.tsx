@@ -12,6 +12,13 @@ import Modal from '../components/modal';
 import CreateRecipeForm from '../components/create_recipe_form';
 import ChatWidget from "@/components/ChatWidget";
 import useTokenValidation from "@/hooks/useTokenValidation";
+import { Recipe } from "@/types/recipe";
+
+interface Category {
+  id: string;
+  name: string;
+  icon: string;
+}
 
 export default function HomePage() {
   useTokenValidation(); // ✅ Validar tokens automáticamente
@@ -19,20 +26,16 @@ export default function HomePage() {
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [input, setInput] = useState("");
-  const [recipes, setRecipes] = useState<any[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
+  const [recipes, setRecipes] = useState<Recipe[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [showAlert, setShowAlert] = useState(false);
   const handleCloseModal = () => setIsModalOpen(false);
   const router = useRouter(); 
   
 
   const handleRecipeUploaded = () => {
-    setShowAlert(true);
     setIsModalOpen(false); // Cierra el modal
-
-    setTimeout(() => setShowAlert(false), 3000); // Oculta la alerta
   };
 
 
@@ -155,7 +158,9 @@ export default function HomePage() {
           {categories.map((c, i) => (
             <div key={i} className="transform hover:scale-105 transition-all duration-300">
               <CategoryCard
-                {...c}
+                icon={c.icon}
+                name={c.name}
+                count={0} // Default count, will be updated when we have recipe counts
                 isActive={selectedCategory === c.name}
                 onClick={() => {
                   setSelectedCategory(c.name); 

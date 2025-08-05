@@ -45,6 +45,7 @@ export async function fetchFromBackend<T>(
       try {
         errorData = await response.json();
       } catch (parseError) {
+        console.log('Error parsing response:', parseError);
         errorData = { message: `HTTP ${response.status}: ${response.statusText}` };
       }
       console.error("❌ Error en la respuesta:", errorData);

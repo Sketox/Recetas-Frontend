@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { useRouter } from "next/navigation";
@@ -53,8 +54,9 @@ export default function LoginForm() {
       localStorage.setItem("userIcon", data.icon);
       login(data.token, data.icon);
       router.push("/");
-    } catch (err: any) {
-      console.error("❌ Error:", err.message);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Error de conexión';
+      console.error("❌ Error:", errorMessage);
     }
   }
 };
@@ -65,9 +67,10 @@ export default function LoginForm() {
       {/* Fondo mejorado con overlay */}
       <div className="absolute inset-0 z-0">
         {/* Imagen de fondo */}
-        <img
+        <Image
           src="/images/banner.jpg"
           alt="Fondo"
+          fill
           className="w-full h-full object-cover"
         />
 

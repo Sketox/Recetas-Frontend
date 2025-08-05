@@ -52,8 +52,9 @@ const RecipeCard = ({
     try {
       const newStatus = await toggleFavorite(recipeId, isFavorite);
       setIsFavorite(newStatus);
-    } catch (error: any) {
-      alert(error.message || "Error al modificar favoritos");
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : "Error al modificar favoritos";
+      alert(errorMessage);
     } finally {
       setIsToggling(false);
     }

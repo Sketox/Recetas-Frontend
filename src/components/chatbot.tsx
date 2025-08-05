@@ -1,13 +1,26 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
+
+interface RecipeAI {
+  titulo: string;
+  ingredientes: string[];
+  instrucciones: string[];
+}
+
+interface ChatMessage {
+  text: string;
+  from: "user" | "ai";
+}
+
+interface AIResponse {
+  success: boolean;
+  recipes: RecipeAI[];
+}
 
 export default function Chatbot() {
   const [input, setInput] = useState("");
-  const [messages, setMessages] = useState<
-    { text: string; from: "user" | "ai" }[]
-  >([
+  const [messages, setMessages] = useState<ChatMessage[]>([
     {
       text: "¡Hola! 👋 Bienvenido al Asistente de Recetas. ¿En qué tipo de recetas estás interesado hoy? Puedo ayudarte con ideas para desayunos, almuerzos, cenas y más.",
       from: "ai"
@@ -17,14 +30,7 @@ export default function Chatbot() {
   const [listening, setListening] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const router = useRouter();
   const scrollRef = useRef<HTMLDivElement>(null);
-
-  const [isMounted, setIsMounted] = useState(false);
-
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({
@@ -46,12 +52,12 @@ export default function Chatbot() {
       const data = await fetchFromBackend("/ai/chat", {
         method: "POST",
         body: JSON.stringify({ message: text }),
-      }) as any;
+      }) as AIResponse;
 
       if (data.success && data.recipes) {
         const aiReply = data.recipes
           .map(
-            (r: any) =>
+            (r) =>
               `🍽️ *${r.titulo}*\n🧂 Ingredientes: ${r.ingredientes.join(", ")}\n📖 Instrucciones: ${r.instrucciones.join(". ")}`
           )
           .join("\n\n");
@@ -64,6 +70,7 @@ export default function Chatbot() {
         ]);
       }
     } catch (error) {
+      console.error('Chat error:', error);
       setMessages((prev) => [
         ...prev,
         { text: "Error al conectar con el servidor.", from: "ai" },
@@ -85,11 +92,6 @@ export default function Chatbot() {
     if (!listening) {
       setTimeout(() => setListening(false), 5000);
     }
-  };
-
-  const handleGoRecipeDetail = () => {
-    if (!isMounted) return;
-    router.push("/recipe-detail");
   };
 
   return (

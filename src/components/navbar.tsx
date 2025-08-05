@@ -188,9 +188,10 @@ export default function Navbar() {
                     >
                       {suggestion.imageUrl && (
                         <div className="relative w-12 h-12 sm:w-14 sm:h-14 mr-3 sm:mr-4 flex-shrink-0">
-                          <img 
+                          <Image 
                             src={suggestion.imageUrl} 
                             alt={suggestion.title}
+                            fill
                             className="w-full h-full object-cover rounded-lg shadow-sm"
                           />
                         </div>
@@ -226,7 +227,7 @@ export default function Navbar() {
                       <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
                         <FaSearch className="text-blue-600" />
                       </div>
-                      <span className="text-sm font-semibold truncate">Ver todos los resultados para "{searchQuery}"</span>
+                      <span className="text-sm font-semibold truncate">Ver todos los resultados para &quot;{searchQuery}&quot;</span>
                     </div>
                   )}
                 </>
@@ -243,7 +244,7 @@ export default function Navbar() {
                   <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-3">
                     <FaSearch className="text-blue-600" />
                   </div>
-                  <span className="text-sm font-semibold truncate">Buscar "{searchQuery}"</span>
+                  <span className="text-sm font-semibold truncate">Buscar &quot;{searchQuery}&quot;</span>
                 </div>
               ) : null}
             </div>

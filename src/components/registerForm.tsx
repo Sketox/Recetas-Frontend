@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { useRouter } from "next/navigation";
@@ -98,13 +99,14 @@ export default function RegisterForm() {
 
       // Redirigir al home
       router.push("/");
-    } catch (error: any) {
-      console.error("❌ Error en registro:", error.message);
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Error de conexión';
+      console.error("❌ Error en registro:", errorMessage);
       
       // Mostrar error específico al usuario
-      if (error.message.includes("usuario ya existe") || error.message.includes("already exists")) {
+      if (errorMessage.includes("usuario ya existe") || errorMessage.includes("already exists")) {
         setErrors(prev => ({ ...prev, general: "Ya existe una cuenta con este email" }));
-      } else if (error.message.includes("datos inválidos") || error.message.includes("invalid")) {
+      } else if (errorMessage.includes("datos inválidos") || errorMessage.includes("invalid")) {
         setErrors(prev => ({ ...prev, general: "Los datos proporcionados no son válidos" }));
       } else {
         setErrors(prev => ({ ...prev, general: "Error al crear la cuenta. Inténtalo de nuevo." }));
@@ -119,9 +121,10 @@ export default function RegisterForm() {
       {/* Fondo mejorado con overlay */}
       <div className="absolute inset-0 z-0">
         {/* Imagen de fondo */}
-        <img
+        <Image
           src="/images/banner.jpg"
           alt="Fondo"
+          fill
           className="w-full h-full object-cover"
         />
 

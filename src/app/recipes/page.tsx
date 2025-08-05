@@ -160,7 +160,7 @@ export default function RecipesPage() {
               {searchTerm ? (
                 <>
                   <span className="font-semibold text-orange-600">{filteredRecipes.length}</span> resultados para 
-                  <span className="font-bold text-gray-900 mx-1">"{searchTerm}"</span> 
+                  <span className="font-bold text-gray-900 mx-1">&quot;{searchTerm}&quot;</span> 
                   de <span className="font-semibold">{recipes.length}</span> recetas totales
                 </>
               ) : (

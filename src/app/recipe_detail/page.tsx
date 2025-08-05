@@ -4,16 +4,17 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Recipe } from "@/types/recipe";
+import { User } from "@/types/types";
 import { fetchFromBackend } from "@/services/index";
 import Modal from "@/components/modal";
 import EditRecipeForm from "@/components/edit_recipe_form";
 
 export default function RecipeDetailPage() {
   const [recipe, setRecipe] = useState<Recipe | null>(null);
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [isOwner, setIsOwner] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
-  const [recipeToEdit, setRecipeToEdit] = useState<any>(null);
+  const [recipeToEdit, setRecipeToEdit] = useState<Recipe | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -36,7 +37,7 @@ export default function RecipeDetailPage() {
           headers: {
             Authorization: `Bearer ${token}`,
           },
-        });
+        }) as User;
         setCurrentUser(userData);
       } catch (error) {
         console.error("Error fetching user:", error);
@@ -51,7 +52,7 @@ export default function RecipeDetailPage() {
     if (recipe && currentUser) {
       // Comparar tanto con _id como con id para mayor compatibilidad
       const recipeOwnerId = recipe.userId;
-      const currentUserId = currentUser._id || currentUser.id;
+      const currentUserId = currentUser._id;
       
       console.log("🔍 Verificando propietario:");
       console.log("Recipe userId:", recipeOwnerId);
@@ -66,7 +67,7 @@ export default function RecipeDetailPage() {
     setEditModalOpen(true);
   };
 
-  const handleRecipeUpdated = async (updatedRecipe: any) => {
+  const handleRecipeUpdated = async (updatedRecipe: Recipe) => {
     console.log("🔄 Actualizando receta:", updatedRecipe);
     
     // Actualizar la receta actual

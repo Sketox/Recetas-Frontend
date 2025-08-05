@@ -1,14 +1,6 @@
 import { useState, useCallback } from 'react';
 import { fetchFromBackend } from '@/services/index';
-
-export interface Recipe {
-  _id?: string;
-  id?: string;
-  title: string;
-  description: string;
-  imageUrl?: string;
-  [key: string]: any;
-}
+import { Recipe } from '@/types/recipe';
 
 export const useFavorites = () => {
   const [favoriteRecipes, setFavoriteRecipes] = useState<Recipe[]>([]);

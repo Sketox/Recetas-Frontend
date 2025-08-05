@@ -24,7 +24,7 @@ export const useTokenValidation = () => {
         }
       } catch (error) {
         // Token malformado, limpiarlo
-        console.log('🗑️ Token malformado, limpiando localStorage');
+        console.log('🗑️ Token malformado, limpiando localStorage:', error);
         localStorage.removeItem('token');
         localStorage.removeItem('userIcon');
       }

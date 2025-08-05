@@ -14,6 +14,7 @@ import { fetchFromBackend } from "@/services/index";
 import useTokenValidation from "@/hooks/useTokenValidation";
 import { useFavorites } from "@/hooks/useFavorites";
 import { getBackgroundColor } from "@/utils/colorUtils";
+import { Recipe } from "@/types/recipe";
 
 
 interface UserProfile {
@@ -29,15 +30,15 @@ export default function ProfilePage() {
   const router = useRouter();
   const { userIcon, logout, setUserIcon } = useAuth();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
-  const [createdRecipes, setCreatedRecipes] = useState([]);
+  const [createdRecipes, setCreatedRecipes] = useState<Recipe[]>([]);
   const [editModalOpen, setEditModalOpen] = useState(false);
-  const [recipeToEdit, setRecipeToEdit] = useState(null);
+  const [recipeToEdit, setRecipeToEdit] = useState<Recipe | null>(null);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [tempUserData, setTempUserData] = useState({ name: "", email: "" });
   const [isSavingIcon, setIsSavingIcon] = useState(false);
   const { favoriteRecipes, loading: favoritesLoading, fetchFavorites } = useFavorites();
 
-  const handleEditRecipe = (recipe: any) => {
+  const handleEditRecipe = (recipe: Recipe) => {
     setRecipeToEdit(recipe);
     setEditModalOpen(true);
   };
@@ -71,10 +72,6 @@ export default function ProfilePage() {
     }
   };
 
-  const handleIconSelect = (iconName: string) => {
-    // El ícono se actualiza temporalmente en el estado local
-  };
-
   const handleSaveIcon = async () => {
     const token = localStorage.getItem("token");
     if (!token) return;
@@ -100,7 +97,7 @@ export default function ProfilePage() {
     }
   };
 
-  const handleRecipeUpdated = async (updatedRecipe: any) => {
+  const handleRecipeUpdated = async (updatedRecipe: Recipe) => {
     console.log("🔄 Actualizando receta en lista:", updatedRecipe);
     
     // Actualizar la lista de recetas creadas
@@ -137,7 +134,7 @@ export default function ProfilePage() {
     }
   };
 
-  const handleDeleteRecipe = async (recipe: any) => {
+  const handleDeleteRecipe = async (recipe: Recipe) => {
     const confirmDelete = confirm(`¿Estás seguro de que quieres eliminar "${recipe.title}"? Esta acción no se puede deshacer.`);
     
     if (!confirmDelete) return;
@@ -166,7 +163,7 @@ export default function ProfilePage() {
     }
   };
 
-  const handleViewRecipe = (recipe: any) => {
+  const handleViewRecipe = (recipe: Recipe) => {
     localStorage.setItem("selectedRecipe", JSON.stringify(recipe));
     router.push("/recipe_detail");
   };
