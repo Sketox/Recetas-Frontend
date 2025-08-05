@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { fetchRecipesFromAI } from "../lib/api";
 import { useRouter } from "next/navigation";
 
 export default function Chatbot() {
@@ -42,12 +41,36 @@ export default function Chatbot() {
     setLoading(true);
 
     try {
-      const res = await fetchRecipesFromAI(text);
-      const aiReply = res.map((r) => r.title).join(", ") || "No encontré recetas";
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ message: text }),
+      });
 
-      setMessages((prev) => [...prev, { text: aiReply, from: "ai" }]);
-    } catch {
-      setMessages((prev) => [...prev, { text: "Error, intenta de nuevo.", from: "ai" }]);
+      const data = await response.json();
+
+      if (data.success && data.recipes) {
+        const aiReply = data.recipes
+          .map(
+            (r: any) =>
+              `🍽️ *${r.titulo}*\n🧂 Ingredientes: ${r.ingredientes.join(", ")}\n📖 Instrucciones: ${r.instrucciones.join(". ")}`
+          )
+          .join("\n\n");
+
+        setMessages((prev) => [...prev, { text: aiReply, from: "ai" }]);
+      } else {
+        setMessages((prev) => [
+          ...prev,
+          { text: "No encontré recetas, intenta con otros ingredientes.", from: "ai" },
+        ]);
+      }
+    } catch (error) {
+      setMessages((prev) => [
+        ...prev,
+        { text: "Error al conectar con el servidor.", from: "ai" },
+      ]);
     } finally {
       setLoading(false);
     }
@@ -74,7 +97,6 @@ export default function Chatbot() {
 
   return (
     <div className="flex flex-col h-full max-h-[450px] w-full rounded-lg border border-gray-300 bg-white shadow-lg overflow-hidden">
-
       {/* Chat messages */}
       <div
         ref={scrollRef}
@@ -132,7 +154,6 @@ export default function Chatbot() {
         >
           ➤
         </button>
-
 
         <button
           onClick={toggleListening}
