@@ -1,60 +1,101 @@
-// Intento de conectar el bakend
-
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { MicrophoneIcon, PlusIcon, Cog6ToothIcon, PaperAirplaneIcon } from '@heroicons/react/24/outline';
-import { Bars3BottomLeftIcon } from '@heroicons/react/24/solid';
 
 export default function ChatPage() {
-  const [input, setInput] = useState('');
   const [messages, setMessages] = useState([]);
+  const recognitionRef = useRef(null);
   const messagesEndRef = useRef(null);
-
-  const handleSend = async () => {
-    if (!input.trim()) return;
-
-    const userMessage = { id: Date.now(), text: input, role: 'user' };
-    setMessages(prev => [...prev, userMessage]);
-    setInput('');
-
-    try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ message: input }),
-      });
-
-      const data = await response.json();
-
-      if (data.success && data.recipes) {
-        const botMessage = {
-          id: Date.now() + 1,
-          role: 'bot',
-          text: JSON.stringify(data.recipes, null, 2),
-        };
-        setMessages(prev => [...prev, botMessage]);
-      } else {
-        setMessages(prev => [...prev, {
-          id: Date.now() + 1,
-          role: 'bot',
-          text: 'Error al obtener respuesta del asistente.',
-        }]);
-      }
-    } catch (error) {
-      setMessages(prev => [...prev, {
-        id: Date.now() + 1,
-        role: 'bot',
-        text: 'Error al conectar con el servidor.',
-      }]);
-    }
-  };
+  const [isRecognizing, setIsRecognizing] = useState(false);
 
   useEffect(() => {
+    // Scroll automático al último mensaje
     messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
   }, [messages]);
+
+  useEffect(() => {
+    // Inicializamos SpeechRecognition
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert('Tu navegador no soporta Speech Recognition');
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'es-ES'; // ajusta idioma
+    recognition.continuous = true; // escucha continua
+    recognition.interimResults = false; // no resultados parciales
+
+    recognition.onresult = async (event) => {
+      const lastResultIndex = event.results.length - 1;
+      const transcript = event.results[lastResultIndex][0].transcript.trim();
+      if (transcript) {
+        // Añadimos mensaje del usuario
+        const userMessage = { id: Date.now(), text: transcript, role: 'user' };
+        setMessages((prev) => [...prev, userMessage]);
+
+        // Enviar al backend
+        try {
+          const response = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message: transcript }),
+          });
+          const data = await response.json();
+
+          let botText = 'No se pudo obtener respuesta del asistente.';
+          if (data.success && data.recipes) {
+            botText = JSON.stringify(data.recipes, null, 2);
+          }
+
+          const botMessage = {
+            id: Date.now() + 1,
+            text: botText,
+            role: 'bot',
+          };
+          setMessages((prev) => [...prev, botMessage]);
+
+          // Voz con SpeechSynthesis
+          const utterance = new SpeechSynthesisUtterance(botText);
+          utterance.lang = 'es-ES';
+          window.speechSynthesis.speak(utterance);
+        } catch (error) {
+          const errorMsg = {
+            id: Date.now() + 1,
+            text: 'Error al conectar con el servidor.',
+            role: 'bot',
+          };
+          setMessages((prev) => [...prev, errorMsg]);
+        }
+      }
+    };
+
+    recognition.onerror = (event) => {
+      console.error('SpeechRecognition error', event.error);
+      // Reiniciamos en caso de error para mantener activo el micrófono
+      if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+        alert('Permiso de micrófono denegado.');
+      } else {
+        recognition.stop();
+        recognition.start();
+      }
+    };
+
+    recognition.onend = () => {
+      // Reiniciar reconocimiento para que sea siempre activo
+      recognition.start();
+    };
+
+    recognition.start();
+    setIsRecognizing(true);
+    recognitionRef.current = recognition;
+
+    return () => {
+      recognition.stop();
+      setIsRecognizing(false);
+    };
+  }, []);
 
   return (
     <div className="h-screen bg-white flex flex-col px-4 text-[#333]">
@@ -65,9 +106,11 @@ export default function ChatPage() {
             key={message.id}
             className={`flex mb-4 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
-            <div className={`p-3 rounded-lg max-w-sm break-words shadow-md ${
-              message.role === 'user' ? 'bg-[#FF8C42] text-white' : 'bg-gray-200 text-black'
-            }`}>
+            <div
+              className={`p-3 rounded-lg max-w-sm break-words shadow-md ${
+                message.role === 'user' ? 'bg-[#FF8C42] text-white' : 'bg-gray-200 text-black'
+              }`}
+            >
               <pre className="whitespace-pre-wrap text-sm">{message.text}</pre>
             </div>
           </div>
@@ -75,25 +118,27 @@ export default function ChatPage() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input y botones */}
-      <div className="sticky bottom-0 bg-white pb-4 pt-2">
-        <div className="border-2 border-[#FF8C42] bg-white w-full max-w-2xl mx-auto rounded-2xl p-4 flex items-center gap-3 shadow-lg">
-          <PlusIcon className="h-5 w-5 text-[#FF8C42]" />
-          <Cog6ToothIcon className="h-5 w-5 text-[#FF8C42]" />
-          <input
-            className="bg-transparent flex-1 text-black placeholder-gray-400 focus:outline-none"
-            placeholder="Escribe ingredientes, ejemplo: arroz, pollo, tomate"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-          />
-          {input.trim() ? (
-            <button onClick={handleSend}>
-              <PaperAirplaneIcon className="h-5 w-5 text-[#FF8C42] rotate-45" />
-            </button>
-          ) : (
-            <MicrophoneIcon className="h-5 w-5 text-[#FF8C42]" />
-          )}
+      {/* Indicador micrófono */}
+      <div className="sticky bottom-0 bg-white pb-4 pt-2 flex justify-center">
+        <div
+          className={`rounded-full w-12 h-12 flex items-center justify-center ${
+            isRecognizing ? 'bg-green-400 animate-pulse' : 'bg-red-400'
+          }`}
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            className="h-6 w-6 text-white"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 1v11m0 0a3 3 0 003 3v0a3 3 0 01-3-3zm0 0a3 3 0 01-3-3v0a3 3 0 003 3zm6 2v2a6 6 0 01-12 0v-2m6 7v3m-3 0h6"
+            />
+          </svg>
         </div>
       </div>
     </div>
