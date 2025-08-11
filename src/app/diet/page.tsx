@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -16,70 +16,17 @@ type DietaData = {
   [dia: string]: Comida;
 };
 
-const mockDieta: DietaData = {
-  Lunes: {
-    desayuno: "Avena con fruta",
-    almuerzo: "Pollo con arroz y ensalada",
-    merienda: "Yogur natural",
-    snack: "Frutas secas",
-    cena: "Sopa de verduras",
-  },
-  Martes: {
-    desayuno: "Pan integral con huevo",
-    almuerzo: "Pescado al horno con papas",
-    merienda: "Batido de frutas",
-    snack: "Barra de cereal",
-    cena: "Ensalada mixta",
-  },
-  Miércoles: {
-    desayuno: "Smoothie verde",
-    almuerzo: "Lentejas con arroz",
-    merienda: "Galletas integrales",
-    snack: "Manzana",
-    cena: "Pollo a la plancha",
-  },
-  Jueves: {
-    desayuno: "Tostadas con aguacate",
-    almuerzo: "Carne magra con verduras",
-    merienda: "Yogur griego",
-    snack: "Nueces",
-    cena: "Ensalada César",
-  },
-  Viernes: {
-    desayuno: "Pan de centeno y queso",
-    almuerzo: "Pasta integral con atún",
-    merienda: "Fruta",
-    snack: "Galletas sin azúcar",
-    cena: "Omelette de vegetales",
-  },
-  Sábado: {
-    desayuno: "Panqueques integrales",
-    almuerzo: "Hamburguesa de lentejas",
-    merienda: "Zumo natural",
-    snack: "Mix de semillas",
-    cena: "Crema de calabaza",
-  },
-  Domingo: {
-    desayuno: "Croissant y café",
-    almuerzo: "Asado con ensalada",
-    merienda: "Helado light",
-    snack: "Frutas deshidratadas",
-    cena: "Wrap de pollo",
-  },
-};
-
 export default function DietPage() {
   const [dieta, setDieta] = useState<DietaData>({});
-
-  useEffect(() => {
-    setDieta(mockDieta);
-  }, []);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   const exportToPDF = () => {
     const doc = new jsPDF();
     doc.setFont("helvetica", "normal");
     doc.setFontSize(14);
-    doc.setTextColor(255, 87, 34); // naranja
+    doc.setTextColor(255, 87, 34);
     doc.text("Tu Dieta Semanal", 14, 20);
 
     const columns = [
@@ -108,13 +55,10 @@ export default function DietPage() {
         textColor: "#333",
       },
       headStyles: {
-        fillColor: [255, 237, 213], // bg-orange-100
+        fillColor: [255, 237, 213],
         textColor: "#000",
         fontStyle: "bold",
         halign: "center",
-      },
-      bodyStyles: {
-        halign: "left",
       },
       alternateRowStyles: {
         fillColor: [255, 250, 240],
@@ -124,11 +68,61 @@ export default function DietPage() {
     doc.save("dieta.pdf");
   };
 
+  const obtenerDietaIA = async () => {
+    if (!input.trim()) return;
+    setLoading(true);
+    try {
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ message: input }),
+      });
+
+      const data = await response.json();
+
+      if (data.success && data.dieta) {
+        setDieta(data.dieta);
+      } else {
+        alert("No se pudo obtener una dieta válida.");
+      }
+    } catch (error) {
+      alert("Error al conectar con la IA.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-orange-500 mb-6">Tu Dieta Semanal</h1>
+      <h1 className="text-3xl font-bold text-orange-500 mb-6">
+        Tu Dieta Semanal
+      </h1>
 
-      <div className="overflow-auto border rounded-lg shadow-md">
+      {/* Entrada del usuario */}
+      <div className="mb-4">
+        <textarea
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
+          placeholder="Describe tu dieta actual o lo que buscas..."
+          className="w-full p-3 border rounded-lg"
+          rows={4}
+        />
+        <button
+          onClick={obtenerDietaIA}
+          disabled={loading}
+          className="mt-2 px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition disabled:opacity-50"
+        >
+          {loading ? "Generando..." : "Obtener Dieta Recomendada"}
+        </button>
+      </div>
+
+      {/* Tabla de dieta */}
+      <div
+        ref={scrollRef}
+        className="overflow-auto border rounded-lg shadow-md max-h-[400px]"
+      >
         <table className="min-w-full bg-white border-collapse">
           <thead>
             <tr className="bg-orange-100">
