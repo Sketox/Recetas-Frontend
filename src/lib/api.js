@@ -1,5 +1,5 @@
 export async function fetchRecipesFromAI(message) {
-  const res = await fetch("http://localhost:5000/api/ai/chat", {
+  const res = await fetch("/api/ai/chat", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ message }),
@@ -9,13 +9,13 @@ export async function fetchRecipesFromAI(message) {
   return data.recipes;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api";
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
 
 // Obtener todas las recetas
 export const getRecipes = async () => {
   try {
     const token = localStorage.getItem("authToken"); // donde guardaste el token
-    const response = await fetch("http://localhost:5000/api/recipes", {
+    const response = await fetch("/api/recipes", {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -33,7 +33,6 @@ export const getRecipes = async () => {
     return [];
   }
 };
-
 
 // Crear una receta nueva
 export async function createRecipe(recipe) {

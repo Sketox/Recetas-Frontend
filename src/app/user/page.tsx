@@ -31,7 +31,12 @@ export default function ProfilePage() {
   ]);
 
   const [createdRecipes] = useState([
-    { id: 2, name: "Nombre del Plato", description: "Descripción del plato", imageUrl: null },
+    {
+      id: 2,
+      name: "Nombre del Plato",
+      description: "Descripción del plato",
+      imageUrl: null,
+    },
   ]);
 
   const IconComponent = getIconComponent(userIcon || "user-circle");
@@ -42,7 +47,7 @@ export default function ProfilePage() {
       if (!token) return;
 
       try {
-        const res = await fetch("http://localhost:5000/api/user/profile", {
+        const res = await fetch("/api/user/profile", {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -80,8 +85,12 @@ export default function ProfilePage() {
         <h1 className="text-3xl font-bold text-gray-900">
           {userProfile?.name || "Cargando..."}
         </h1>
-        <p className="text-gray-600 text-sm mt-1">{userProfile?.pronouns || ""}</p>
-        <p className="text-gray-700 text-md mt-2">{userProfile?.location || ""}</p>
+        <p className="text-gray-600 text-sm mt-1">
+          {userProfile?.pronouns || ""}
+        </p>
+        <p className="text-gray-700 text-md mt-2">
+          {userProfile?.location || ""}
+        </p>
 
         <div className="mt-6">
           <h3 className="text-lg font-semibold mb-2">Selecciona tu ícono:</h3>
@@ -97,19 +106,32 @@ export default function ProfilePage() {
       </section>
 
       <section className="bg-white shadow-md mx-auto max-w-4xl rounded-lg mt-8 p-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Recetas Favoritas</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">
+          Recetas Favoritas
+        </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           {favoriteRecipes.map((recipe) => (
-            <div key={recipe.id} className="border rounded-lg shadow-sm hover:shadow-md transition-shadow">
+            <div
+              key={recipe.id}
+              className="border rounded-lg shadow-sm hover:shadow-md transition-shadow"
+            >
               <div className="w-full h-32 bg-gray-200 flex items-center justify-center">
                 {recipe.imageUrl ? (
-                  <Image src={recipe.imageUrl} alt={recipe.name} width={200} height={128} className="object-cover w-full h-full" />
+                  <Image
+                    src={recipe.imageUrl}
+                    alt={recipe.name}
+                    width={200}
+                    height={128}
+                    className="object-cover w-full h-full"
+                  />
                 ) : (
                   <span className="text-gray-500 text-sm">No hay imagen</span>
                 )}
               </div>
               <div className="p-4">
-                <h3 className="font-semibold text-gray-800 text-lg">{recipe.name}</h3>
+                <h3 className="font-semibold text-gray-800 text-lg">
+                  {recipe.name}
+                </h3>
                 <p className="text-gray-500 text-sm">{recipe.description}</p>
               </div>
             </div>
@@ -118,13 +140,24 @@ export default function ProfilePage() {
       </section>
 
       <section className="bg-white shadow-md mx-auto max-w-4xl rounded-lg mt-8 p-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Recetas Creadas</h2>
+        <h2 className="text-2xl font-bold text-gray-900 mb-6">
+          Recetas Creadas
+        </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           {createdRecipes.map((recipe) => (
-            <div key={recipe.id} className="border rounded-lg shadow-sm hover:shadow-md transition-shadow">
+            <div
+              key={recipe.id}
+              className="border rounded-lg shadow-sm hover:shadow-md transition-shadow"
+            >
               <div className="w-full h-32 bg-gray-200 flex items-center justify-center relative">
                 {recipe.imageUrl ? (
-                  <Image src={recipe.imageUrl} alt={recipe.name} width={200} height={128} className="object-cover w-full h-full" />
+                  <Image
+                    src={recipe.imageUrl}
+                    alt={recipe.name}
+                    width={200}
+                    height={128}
+                    className="object-cover w-full h-full"
+                  />
                 ) : (
                   <span className="text-gray-500 text-sm">No hay imagen</span>
                 )}
@@ -133,7 +166,9 @@ export default function ProfilePage() {
                 </button>
               </div>
               <div className="p-4">
-                <h3 className="font-semibold text-gray-800 text-lg">{recipe.name}</h3>
+                <h3 className="font-semibold text-gray-800 text-lg">
+                  {recipe.name}
+                </h3>
                 <p className="text-gray-500 text-sm">{recipe.description}</p>
               </div>
             </div>

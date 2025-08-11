@@ -67,7 +67,7 @@ export default function ChefVoiceAssistant() {
 
     try {
       // Enviar al backend
-      const response = await fetch("http://localhost:5000/api/chef-voice", {
+      const response = await fetch("/api/chef-voice", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

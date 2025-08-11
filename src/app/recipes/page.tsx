@@ -32,7 +32,7 @@ export default function RecipesPage() {
   useEffect(() => {
     const fetchRecipes = async () => {
       try {
-        const res = await fetch("http://localhost:5000/api/recipes", {
+        const res = await fetch("/api/recipes", {
           cache: "no-store",
         });
         const data = await res.json();

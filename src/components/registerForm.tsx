@@ -60,13 +60,13 @@ export default function RegisterForm() {
     const icon = getRandomIcon();
     const { nombre, email, password } = formData;
 
-    const isValid = Object.entries(validate).every(
-      ([field, fn]) => fn(formData[field as keyof typeof formData])
+    const isValid = Object.entries(validate).every(([field, fn]) =>
+      fn(formData[field as keyof typeof formData])
     );
 
     if (isValid) {
       try {
-        const res = await fetch("http://localhost:5000/api/auth/register", {
+        const res = await fetch("/api/auth/register", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ name: nombre, email, password, icon }),
@@ -100,25 +100,41 @@ export default function RegisterForm() {
         <div className="absolute inset-0 bg-gradient-to-t from-black/100 via-transparent to-transparent" />
       </div>
 
-
-
       {/* Contenido del formulario */}
       <div className="relative z-10 bg-white/80 backdrop-blur-md p-12 rounded-xl shadow-xl w-full max-w-lg">
-        <h2 className="text-center text-2xl font-semibold mb-2">¿Eres nuevo?</h2>
-        <h1 className="text-center text-3xl font-extrabold text-orange-500 mb-8">Regístrate</h1>
+        <h2 className="text-center text-2xl font-semibold mb-2">
+          ¿Eres nuevo?
+        </h2>
+        <h1 className="text-center text-3xl font-extrabold text-orange-500 mb-8">
+          Regístrate
+        </h1>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {[
-            { label: "Nombre completo", type: "text", field: "nombre", placeholder: "Juan Pérez" },
-            { label: "Email", type: "email", field: "email", placeholder: "example@gmail.com" },
+            {
+              label: "Nombre completo",
+              type: "text",
+              field: "nombre",
+              placeholder: "Juan Pérez",
+            },
+            {
+              label: "Email",
+              type: "email",
+              field: "email",
+              placeholder: "example@gmail.com",
+            },
           ].map(({ label, type, field, placeholder }) => (
             <div key={field}>
-              <label className="block text-base font-medium mb-2">{label}</label>
+              <label className="block text-base font-medium mb-2">
+                {label}
+              </label>
               <input
                 type={type}
                 placeholder={placeholder}
                 value={formData[field as keyof typeof formData]}
-                onChange={(e) => handleChange(field as keyof typeof formData, e.target.value)}
+                onChange={(e) =>
+                  handleChange(field as keyof typeof formData, e.target.value)
+                }
                 className={`w-full border rounded px-4 py-3 text-base focus:outline-none focus:ring-2 ${
                   errors[field as keyof typeof errors]
                     ? "border-red-500 focus:ring-red-400"
@@ -127,20 +143,26 @@ export default function RegisterForm() {
                 required
               />
               {errors[field as keyof typeof errors] && (
-                <p className="text-red-500 text-sm mt-1">{errors[field as keyof typeof errors]}</p>
+                <p className="text-red-500 text-sm mt-1">
+                  {errors[field as keyof typeof errors]}
+                </p>
               )}
             </div>
           ))}
 
           <div className="relative">
-            <label className="block text-base font-medium mb-2">Contraseña</label>
+            <label className="block text-base font-medium mb-2">
+              Contraseña
+            </label>
             <input
               type={showPassword ? "text" : "password"}
               placeholder="************"
               value={formData.password}
               onChange={(e) => handleChange("password", e.target.value)}
               className={`w-full border rounded px-4 py-3 text-base focus:outline-none focus:ring-2 ${
-                errors.password ? "border-red-500 focus:ring-red-400" : "border-gray-400 focus:ring-orange-400"
+                errors.password
+                  ? "border-red-500 focus:ring-red-400"
+                  : "border-gray-400 focus:ring-orange-400"
               }`}
               required
             />
@@ -151,7 +173,9 @@ export default function RegisterForm() {
             >
               {showPassword ? <FiEyeOff size={25} /> : <FiEye size={25} />}
             </button>
-            {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
+            {errors.password && (
+              <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+            )}
           </div>
 
           <button
@@ -170,7 +194,10 @@ export default function RegisterForm() {
 
         <p className="text-center text-base text-gray-700">
           ¿Ya tienes una cuenta?{" "}
-          <Link href="/login" className="text-blue-500 underline hover:text-blue-900">
+          <Link
+            href="/login"
+            className="text-blue-500 underline hover:text-blue-900"
+          >
             Inicia sesión.
           </Link>
         </p>

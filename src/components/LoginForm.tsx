@@ -27,9 +27,7 @@ export default function LoginForm() {
 
     setErrors((prev) => ({
       ...prev,
-      [field]: value && !validate[field](value)
-        ? "Campo inválido"
-        : "",
+      [field]: value && !validate[field](value) ? "Campo inválido" : "",
     }));
   };
 
@@ -38,7 +36,7 @@ export default function LoginForm() {
 
     if (!errors.email && !errors.password && email && password) {
       try {
-        const res = await fetch("http://localhost:5000/api/auth/login", {
+        const res = await fetch("/api/auth/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ email, password }),
@@ -74,8 +72,12 @@ export default function LoginForm() {
 
       {/* Contenido del formulario */}
       <div className="relative z-10 bg-white/80 backdrop-blur-md p-8 rounded-xl shadow-lg w-full max-w-md">
-        <h2 className="text-center text-2xl font-semibold mb-2">¡Bienvenido de nuevo!</h2>
-        <h1 className="text-center text-3xl font-extrabold text-orange-500 mb-8">Iniciar sesión</h1>
+        <h2 className="text-center text-2xl font-semibold mb-2">
+          ¡Bienvenido de nuevo!
+        </h2>
+        <h1 className="text-center text-3xl font-extrabold text-orange-500 mb-8">
+          Iniciar sesión
+        </h1>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
@@ -86,22 +88,30 @@ export default function LoginForm() {
               value={email}
               onChange={(e) => handleChange("email", e.target.value)}
               className={`w-full border rounded px-4 py-3 text-base focus:outline-none focus:ring-2 ${
-                errors.email ? "border-red-500 focus:ring-red-400" : "border-gray-400 focus:ring-orange-400"
+                errors.email
+                  ? "border-red-500 focus:ring-red-400"
+                  : "border-gray-400 focus:ring-orange-400"
               }`}
               required
             />
-            {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
+            {errors.email && (
+              <p className="text-red-500 text-sm mt-1">{errors.email}</p>
+            )}
           </div>
 
           <div className="relative">
-            <label className="block text-base font-medium mb-2">Contraseña</label>
+            <label className="block text-base font-medium mb-2">
+              Contraseña
+            </label>
             <input
               type={showPassword ? "text" : "password"}
               placeholder="************"
               value={password}
               onChange={(e) => handleChange("password", e.target.value)}
               className={`w-full border rounded px-4 py-3 text-base focus:outline-none focus:ring-2 ${
-                errors.password ? "border-red-500 focus:ring-red-400" : "border-gray-400 focus:ring-orange-400"
+                errors.password
+                  ? "border-red-500 focus:ring-red-400"
+                  : "border-gray-400 focus:ring-orange-400"
               }`}
               required
             />
@@ -112,11 +122,16 @@ export default function LoginForm() {
             >
               {showPassword ? <FiEyeOff size={25} /> : <FiEye size={25} />}
             </button>
-            {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
+            {errors.password && (
+              <p className="text-red-500 text-sm mt-1">{errors.password}</p>
+            )}
           </div>
 
           <div className="text-right">
-            <Link href="#" className="text-blue-500 text-sm underline hover:text-blue-900">
+            <Link
+              href="#"
+              className="text-blue-500 text-sm underline hover:text-blue-900"
+            >
               ¿Olvidaste tu contraseña?
             </Link>
           </div>
@@ -137,7 +152,10 @@ export default function LoginForm() {
 
         <p className="text-center text-base text-gray-700">
           ¿No tienes una cuenta?{" "}
-          <Link href="/register" className="text-blue-500 underline hover:text-blue-900">
+          <Link
+            href="/register"
+            className="text-blue-500 underline hover:text-blue-900"
+          >
             Regístrate.
           </Link>
         </p>
