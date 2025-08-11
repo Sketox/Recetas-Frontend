@@ -11,12 +11,12 @@ const nextConfig = {
     if (process.env.NODE_ENV === "development") {
       rules.push({
         source: "/api/:path*",
-        destination: "http://localhost:5000/:path*",
+        destination: "http://localhost:5000/api/:path*",
       });
     } else if (process.env.TUNNEL_URL) {
       rules.push({
         source: "/api/:path*",
-        destination: `${process.env.TUNNEL_URL}/:path*`,
+        destination: `${process.env.TUNNEL_URL}/api/:path*`,
       });
     }
     return rules;
