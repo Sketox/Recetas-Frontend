@@ -7,6 +7,7 @@ interface Props {
   time: number;
   difficulty: string;
   rating: number;
+  onViewRecipe?: () => void; // ✅ Nuevo
 }
 
 const RecipeCard = ({
@@ -16,6 +17,7 @@ const RecipeCard = ({
   time,
   difficulty,
   rating,
+  onViewRecipe,
 }: Props) => {
   return (
     <div className="bg-white rounded-lg shadow-xl hover:shadow-md transition">
@@ -35,7 +37,10 @@ const RecipeCard = ({
           <span>🔥 {difficulty}</span>
           <span>⭐ {rating}</span>
         </div>
-        <button className="mt-3 px-4 py-2 text-sm bg-blue-50 text-blue-600 rounded hover:bg-blue-100">
+        <button
+          onClick={onViewRecipe}
+          className="mt-3 px-4 py-2 text-sm bg-blue-50 text-blue-600 rounded hover:bg-blue-100"
+        >
           👁 Ver Receta
         </button>
       </div>
