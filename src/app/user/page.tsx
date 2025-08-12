@@ -16,7 +16,6 @@ import { useFavorites } from "@/hooks/useFavorites";
 import { getBackgroundColor } from "@/utils/colorUtils";
 import { Recipe } from "@/types/recipe";
 
-
 interface UserProfile {
   name: string;
   email: string;
@@ -26,7 +25,7 @@ interface UserProfile {
 
 export default function ProfilePage() {
   useTokenValidation();
-  
+
   const router = useRouter();
   const { userIcon, logout, setUserIcon } = useAuth();
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
@@ -36,27 +35,23 @@ export default function ProfilePage() {
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [tempUserData, setTempUserData] = useState({ name: "", email: "" });
   const [isSavingIcon, setIsSavingIcon] = useState(false);
-  const { favoriteRecipes, loading: favoritesLoading, fetchFavorites } = useFavorites();
+  const {
+    favoriteRecipes,
+    loading: favoritesLoading,
+    fetchFavorites,
+  } = useFavorites();
+
+  const IconComponent = getIconComponent(userIcon || "user-circle");
 
   const handleEditRecipe = (recipe: Recipe) => {
     setRecipeToEdit(recipe);
     setEditModalOpen(true);
   };
 
-<<<<<<< HEAD
-  const [createdRecipes] = useState([
-    {
-      id: 2,
-      name: "Nombre del Plato",
-      description: "Descripción del plato",
-      imageUrl: null,
-    },
-  ]);
-=======
   const handleEditProfile = () => {
     setTempUserData({
       name: userProfile?.name || "",
-      email: userProfile?.email || ""
+      email: userProfile?.email || "",
     });
     setIsEditingProfile(true);
   };
@@ -68,13 +63,11 @@ export default function ProfilePage() {
     try {
       await fetchFromBackend("/user/me", {
         method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
         body: JSON.stringify(tempUserData),
       });
 
-      setUserProfile(prev => prev ? { ...prev, ...tempUserData } : null);
+      setUserProfile((prev) => (prev ? { ...prev, ...tempUserData } : null));
       setIsEditingProfile(false);
     } catch (error) {
       console.error("Error al actualizar perfil:", error);
@@ -90,14 +83,12 @@ export default function ProfilePage() {
     try {
       await fetchFromBackend("/user/me/icon", {
         method: "PUT",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
         body: JSON.stringify({ icon: userIcon }),
       });
 
       if (userProfile) {
-        setUserProfile(prev => prev ? { ...prev, icon: userIcon } : null);
+        setUserProfile((prev) => (prev ? { ...prev, icon: userIcon } : null));
       }
     } catch (error) {
       console.error("Error al actualizar ícono:", error);
@@ -108,35 +99,26 @@ export default function ProfilePage() {
   };
 
   const handleRecipeUpdated = async (updatedRecipe: Recipe) => {
-    console.log("🔄 Actualizando receta en lista:", updatedRecipe);
-    
-    // Actualizar la lista de recetas creadas
-    setCreatedRecipes(prev => prev.map(recipe => {
-      const recipeId = recipe._id || recipe.id;
-      const updatedId = updatedRecipe._id || updatedRecipe.id;
-      
-      if (recipeId === updatedId) {
-        console.log("✅ Receta encontrada y actualizada:", updatedRecipe);
-        return updatedRecipe;
-      }
-      return recipe;
-    }));
-    
-    // Cerrar el modal
+    // Actualiza en memoria
+    setCreatedRecipes((prev) =>
+      prev.map((recipe) => {
+        const recipeId = recipe._id || recipe.id;
+        const updatedId = updatedRecipe._id || updatedRecipe.id;
+        return recipeId === updatedId ? updatedRecipe : recipe;
+      })
+    );
+
     setEditModalOpen(false);
     setRecipeToEdit(null);
-    
-    // Refrescar las recetas desde el backend para asegurar que tenemos la versión más reciente
+
+    // Refresca desde backend
     const token = localStorage.getItem("token");
     if (token) {
       try {
         const data = await fetchFromBackend("/recipes/my-recipes", {
           method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
-        console.log("🔄 Recetas refrescadas desde backend:", data);
         setCreatedRecipes(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error("Error al refrescar recetas:", error);
@@ -145,8 +127,9 @@ export default function ProfilePage() {
   };
 
   const handleDeleteRecipe = async (recipe: Recipe) => {
-    const confirmDelete = confirm(`¿Estás seguro de que quieres eliminar "${recipe.title}"? Esta acción no se puede deshacer.`);
-    
+    const confirmDelete = confirm(
+      `¿Estás seguro de que quieres eliminar "${recipe.title}"? Esta acción no se puede deshacer.`
+    );
     if (!confirmDelete) return;
 
     const token = localStorage.getItem("token");
@@ -159,14 +142,13 @@ export default function ProfilePage() {
       const recipeId = recipe._id || recipe.id;
       await fetchFromBackend(`/recipes/${recipeId}`, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
 
+      setCreatedRecipes((prev) =>
+        prev.filter((r) => (r._id || r.id) !== recipeId)
+      );
       alert("Receta eliminada exitosamente");
-      // Actualizar la lista de recetas creadas
-      setCreatedRecipes(prev => prev.filter(r => (r._id || r.id) !== recipeId));
     } catch (error) {
       console.error("Error al eliminar receta:", error);
       alert("Error al eliminar la receta. Inténtalo de nuevo.");
@@ -177,33 +159,20 @@ export default function ProfilePage() {
     localStorage.setItem("selectedRecipe", JSON.stringify(recipe));
     router.push("/recipe_detail");
   };
->>>>>>> origin/samuel
 
-  const IconComponent = getIconComponent(userIcon || "user-circle");
-
+  // Mis recetas + favoritos
   useEffect(() => {
     const fetchCreatedRecipes = async () => {
       const token = localStorage.getItem("token");
       if (!token) {
-        console.log("No hay token, no se cargan recetas creadas");
         setCreatedRecipes([]);
         return;
       }
-
       try {
-<<<<<<< HEAD
-        const res = await fetch("/api/user/profile", {
-          headers: { Authorization: `Bearer ${token}` },
-=======
         const data = await fetchFromBackend("/recipes/my-recipes", {
           method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
->>>>>>> origin/samuel
+          headers: { Authorization: `Bearer ${token}` },
         });
-
-        console.log("📦 Recetas creadas:", data);
         setCreatedRecipes(Array.isArray(data) ? data : []);
       } catch (error) {
         console.error("Error al obtener recetas creadas:", error);
@@ -218,28 +187,19 @@ export default function ProfilePage() {
     }
   }, [fetchFavorites]);
 
-  
-
-useEffect(() => {
+  // Perfil de usuario
+  useEffect(() => {
     const fetchUserProfile = async () => {
       const token = localStorage.getItem("token");
-      console.log("🔐 Token:", token);
-
       if (!token) {
-        console.log("No hay token, no se carga perfil");
         setUserProfile(null);
         return;
       }
-
       try {
         const data = await fetchFromBackend("/user/me", {
           method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: { Authorization: `Bearer ${token}` },
         });
-
-        console.log("📦 Respuesta del backend:", data);
         setUserProfile(data as UserProfile);
       } catch (error) {
         console.error("Error al obtener perfil:", error);
@@ -250,20 +210,18 @@ useEffect(() => {
     fetchUserProfile();
   }, []);
 
-
   return (
     <main className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
-      {/* Header moderno con banner */}
+      {/* Header */}
       <div className="relative bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600">
-        <div className="absolute inset-0 bg-black/10"></div>
+        <div className="absolute inset-0 bg-black/10" />
         <div className="relative px-4 py-16 sm:py-20">
           <div className="max-w-4xl mx-auto text-center">
-            {/* Avatar grande */}
+            {/* Avatar */}
             <div className="relative inline-block mb-6">
               <div className="w-32 h-32 sm:w-40 sm:h-40 rounded-full bg-white shadow-2xl flex items-center justify-center border-4 border-white/50 backdrop-blur-sm">
                 <IconComponent className="w-20 h-20 sm:w-24 sm:h-24 text-orange-500" />
               </div>
-              {/* Badge de configuración */}
               <button
                 onClick={handleEditProfile}
                 className="absolute -bottom-2 -right-2 w-10 h-10 bg-white rounded-full shadow-lg flex items-center justify-center hover:bg-gray-50 transition-colors border-2 border-orange-200"
@@ -273,21 +231,25 @@ useEffect(() => {
               </button>
             </div>
 
-            {/* Información del usuario */}
+            {/* Info usuario */}
             <div className="text-white">
               {isEditingProfile ? (
                 <div className="space-y-4 max-w-md mx-auto">
                   <input
                     type="text"
                     value={tempUserData.name}
-                    onChange={(e) => setTempUserData(prev => ({ ...prev, name: e.target.value }))}
+                    onChange={(e) =>
+                      setTempUserData((p) => ({ ...p, name: e.target.value }))
+                    }
                     className="w-full px-4 py-2 rounded-lg text-gray-800 text-center text-2xl font-bold"
                     placeholder="Nombre"
                   />
                   <input
                     type="email"
                     value={tempUserData.email}
-                    onChange={(e) => setTempUserData(prev => ({ ...prev, email: e.target.value }))}
+                    onChange={(e) =>
+                      setTempUserData((p) => ({ ...p, email: e.target.value }))
+                    }
                     className="w-full px-4 py-2 rounded-lg text-gray-800 text-center"
                     placeholder="Email"
                   />
@@ -315,7 +277,12 @@ useEffect(() => {
                     {userProfile?.email || ""}
                   </p>
                   <p className="text-orange-200 text-sm">
-                    Miembro desde {userProfile?.createdAt ? new Date(userProfile.createdAt).toLocaleDateString("es-ES") : ""}
+                    Miembro desde{" "}
+                    {userProfile?.createdAt
+                      ? new Date(userProfile.createdAt).toLocaleDateString(
+                          "es-ES"
+                        )
+                      : ""}
                   </p>
                 </>
               )}
@@ -324,16 +291,18 @@ useEffect(() => {
         </div>
       </div>
 
-      {/* Contenido principal */}
+      {/* Contenido */}
       <div className="max-w-6xl mx-auto px-4 -mt-8 relative z-10">
-        {/* Tarjeta de configuración */}
+        {/* Configuración */}
         <div className="bg-white rounded-2xl shadow-xl p-6 mb-8 border border-gray-100">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
             <div>
-              <h2 className="text-xl font-semibold text-gray-800 mb-2">Personaliza tu perfil</h2>
+              <h2 className="text-xl font-semibold text-gray-800 mb-2">
+                Personaliza tu perfil
+              </h2>
               <p className="text-gray-600">Elige un ícono que te represente</p>
             </div>
-            
+
             <div className="flex items-center gap-4">
               <ModernIconPicker
                 currentIcon={userIcon || "user-circle"}
@@ -341,7 +310,6 @@ useEffect(() => {
                 onSave={handleSaveIcon}
                 isLoading={isSavingIcon}
               />
-              
               <button
                 onClick={logout}
                 className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium shadow-md"
@@ -352,7 +320,7 @@ useEffect(() => {
           </div>
         </div>
 
-        {/* Estadísticas */}
+        {/* Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
           <div className="bg-white rounded-xl p-6 shadow-md border border-gray-100">
             <div className="flex items-center">
@@ -360,24 +328,28 @@ useEffect(() => {
                 <span className="text-2xl">🍽️</span>
               </div>
               <div className="ml-4">
-                <p className="text-2xl font-bold text-gray-800">{createdRecipes.length}</p>
+                <p className="text-2xl font-bold text-gray-800">
+                  {createdRecipes.length}
+                </p>
                 <p className="text-gray-600">Recetas creadas</p>
               </div>
             </div>
           </div>
-          
+
           <div className="bg-white rounded-xl p-6 shadow-md border border-gray-100">
             <div className="flex items-center">
               <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
                 <span className="text-2xl">❤️</span>
               </div>
               <div className="ml-4">
-                <p className="text-2xl font-bold text-gray-800">{favoriteRecipes.length}</p>
+                <p className="text-2xl font-bold text-gray-800">
+                  {favoriteRecipes.length}
+                </p>
                 <p className="text-gray-600">Recetas favoritas</p>
               </div>
             </div>
           </div>
-          
+
           <div className="bg-white rounded-xl p-6 shadow-md border border-gray-100">
             <div className="flex items-center">
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
@@ -391,7 +363,7 @@ useEffect(() => {
           </div>
         </div>
 
-        {/* Sección de Recetas Favoritas */}
+        {/* Favoritas */}
         <div className="bg-white rounded-2xl shadow-xl p-6 mb-8 border border-gray-100">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-3">
@@ -404,10 +376,10 @@ useEffect(() => {
               {favoriteRecipes.length} recetas
             </span>
           </div>
-          
+
           {favoritesLoading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="animate-spin w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full"></div>
+              <div className="animate-spin w-8 h-8 border-4 border-orange-500 border-t-transparent rounded-full" />
               <span className="ml-3 text-gray-600">Cargando favoritos...</span>
             </div>
           ) : favoriteRecipes.length > 0 ? (
@@ -432,8 +404,12 @@ useEffect(() => {
               <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-3xl">💔</span>
               </div>
-              <h3 className="text-lg font-medium text-gray-800 mb-2">No tienes recetas favoritas</h3>
-              <p className="text-gray-600 mb-4">Explora nuestras recetas y marca las que más te gusten</p>
+              <h3 className="text-lg font-medium text-gray-800 mb-2">
+                No tienes recetas favoritas
+              </h3>
+              <p className="text-gray-600 mb-4">
+                Explora nuestras recetas y marca las que más te gusten
+              </p>
               <button
                 onClick={() => router.push("/recipes")}
                 className="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
@@ -444,98 +420,7 @@ useEffect(() => {
           )}
         </div>
 
-<<<<<<< HEAD
-      <section className="pt-20 sm:pt-24 pb-8 text-center bg-white shadow-md mx-auto max-w-4xl rounded-lg mt-8 px-4">
-        <h1 className="text-3xl font-bold text-gray-900">
-          {userProfile?.name || "Cargando..."}
-        </h1>
-        <p className="text-gray-600 text-sm mt-1">
-          {userProfile?.pronouns || ""}
-        </p>
-        <p className="text-gray-700 text-md mt-2">
-          {userProfile?.location || ""}
-        </p>
-
-        <div className="mt-6">
-          <h3 className="text-lg font-semibold mb-2">Selecciona tu ícono:</h3>
-          <IconPicker />
-        </div>
-
-        <button
-          onClick={logout}
-          className="mt-6 bg-red-500 text-white py-2 px-6 rounded-full font-semibold hover:bg-red-600 transition-colors shadow-md"
-        >
-          Cerrar sesión
-        </button>
-      </section>
-
-      <section className="bg-white shadow-md mx-auto max-w-4xl rounded-lg mt-8 p-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">
-          Recetas Favoritas
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {favoriteRecipes.map((recipe) => (
-            <div
-              key={recipe.id}
-              className="border rounded-lg shadow-sm hover:shadow-md transition-shadow"
-            >
-              <div className="w-full h-32 bg-gray-200 flex items-center justify-center">
-                {recipe.imageUrl ? (
-                  <Image
-                    src={recipe.imageUrl}
-                    alt={recipe.name}
-                    width={200}
-                    height={128}
-                    className="object-cover w-full h-full"
-                  />
-                ) : (
-                  <span className="text-gray-500 text-sm">No hay imagen</span>
-                )}
-              </div>
-              <div className="p-4">
-                <h3 className="font-semibold text-gray-800 text-lg">
-                  {recipe.name}
-                </h3>
-                <p className="text-gray-500 text-sm">{recipe.description}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <section className="bg-white shadow-md mx-auto max-w-4xl rounded-lg mt-8 p-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">
-          Recetas Creadas
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-          {createdRecipes.map((recipe) => (
-            <div
-              key={recipe.id}
-              className="border rounded-lg shadow-sm hover:shadow-md transition-shadow"
-            >
-              <div className="w-full h-32 bg-gray-200 flex items-center justify-center relative">
-                {recipe.imageUrl ? (
-                  <Image
-                    src={recipe.imageUrl}
-                    alt={recipe.name}
-                    width={200}
-                    height={128}
-                    className="object-cover w-full h-full"
-                  />
-                ) : (
-                  <span className="text-gray-500 text-sm">No hay imagen</span>
-                )}
-                <button className="absolute top-2 right-2 bg-white rounded-full p-1 shadow hover:bg-gray-100 transition-colors">
-                  <FaEdit className="text-gray-600 w-4 h-4" />
-                </button>
-              </div>
-              <div className="p-4">
-                <h3 className="font-semibold text-gray-800 text-lg">
-                  {recipe.name}
-                </h3>
-                <p className="text-gray-500 text-sm">{recipe.description}</p>
-=======
-        {/* Sección de Recetas Creadas */}
+        {/* Mis recetas */}
         <div className="bg-white rounded-2xl shadow-xl p-6 mb-8 border border-gray-100">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-3">
@@ -548,35 +433,40 @@ useEffect(() => {
               {createdRecipes.length} recetas
             </span>
           </div>
-          
+
           {createdRecipes.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {createdRecipes.map((recipe) => (
-                <div 
-                  key={recipe._id || recipe.id} 
+                <div
+                  key={recipe._id || recipe.id}
                   className="bg-white border border-gray-200 rounded-xl shadow-sm hover:shadow-md transition-all duration-200 cursor-pointer group"
                   onClick={() => handleViewRecipe(recipe)}
                 >
                   <div className="relative w-full h-48 rounded-t-xl overflow-hidden">
                     {recipe.imageUrl && recipe.imageUrl.trim() !== "" ? (
-                      <Image 
-                        src={recipe.imageUrl} 
-                        alt={recipe.title} 
+                      <Image
+                        src={recipe.imageUrl}
+                        alt={recipe.title}
                         fill
-                        className="object-cover group-hover:scale-105 transition-transform duration-300" 
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                     ) : (
-                      <div className={`w-full h-full flex flex-col items-center justify-center text-white ${getBackgroundColor(recipe.title)}`}>
+                      <div
+                        className={`w-full h-full flex flex-col items-center justify-center text-white ${getBackgroundColor(
+                          recipe.title
+                        )}`}
+                      >
                         <div className="text-4xl mb-2">🍽️</div>
                         <span className="text-sm font-medium px-2 text-center opacity-90">
-                          {recipe.title.length > 20 ? recipe.title.substring(0, 20) + '...' : recipe.title}
+                          {recipe.title.length > 20
+                            ? recipe.title.substring(0, 20) + "..."
+                            : recipe.title}
                         </span>
                       </div>
                     )}
-                    
-                    {/* Botones de acción mejorados */}
+
                     <div className="absolute top-3 right-3 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button 
+                      <button
                         onClick={(e) => {
                           e.stopPropagation();
                           handleEditRecipe(recipe);
@@ -586,7 +476,7 @@ useEffect(() => {
                       >
                         <FaEdit className="w-3 h-3" />
                       </button>
-                      <button 
+                      <button
                         onClick={(e) => {
                           e.stopPropagation();
                           handleDeleteRecipe(recipe);
@@ -598,22 +488,29 @@ useEffect(() => {
                       </button>
                     </div>
 
-                    {/* Badge de tiempo */}
                     <div className="absolute bottom-3 left-3 bg-black/70 text-white px-2 py-1 rounded-lg text-xs">
-                      ⏱ {((recipe.prepTime || 0) + (recipe.cookTime || 0))} min
+                      ⏱ {(recipe.prepTime || 0) + (recipe.cookTime || 0)} min
                     </div>
                   </div>
-                  
+
                   <div className="p-4">
-                    <h3 className="font-semibold text-gray-800 text-lg mb-2 line-clamp-1">{recipe.title}</h3>
-                    <p className="text-gray-600 text-sm mb-3 line-clamp-2">{recipe.description}</p>
-                    
+                    <h3 className="font-semibold text-gray-800 text-lg mb-2 line-clamp-1">
+                      {recipe.title}
+                    </h3>
+                    <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                      {recipe.description}
+                    </p>
+
                     <div className="flex items-center justify-between text-xs text-gray-500">
                       <span className="flex items-center gap-1">
                         🔥 {recipe.difficulty}
                       </span>
                       <span>
-                        {new Date(recipe.createdAt).toLocaleDateString("es-ES")}
+                        {recipe.createdAt
+                          ? new Date(recipe.createdAt).toLocaleDateString(
+                              "es-ES"
+                            )
+                          : ""}
                       </span>
                     </div>
                   </div>
@@ -624,10 +521,13 @@ useEffect(() => {
             <div className="text-center py-12">
               <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-3xl">👨‍🍳</span>
->>>>>>> origin/samuel
               </div>
-              <h3 className="text-lg font-medium text-gray-800 mb-2">No has creado ninguna receta</h3>
-              <p className="text-gray-600 mb-4">¡Comparte tus recetas favoritas con la comunidad!</p>
+              <h3 className="text-lg font-medium text-gray-800 mb-2">
+                No has creado ninguna receta
+              </h3>
+              <p className="text-gray-600 mb-4">
+                ¡Comparte tus recetas favoritas con la comunidad!
+              </p>
               <button
                 onClick={() => router.push("/recipes")}
                 className="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
@@ -639,9 +539,9 @@ useEffect(() => {
         </div>
       </div>
 
-      {/* Modal para editar receta */}
+      {/* Modal editar receta */}
       <Modal isOpen={editModalOpen} onClose={() => setEditModalOpen(false)}>
-        <EditRecipeForm 
+        <EditRecipeForm
           recipe={recipeToEdit}
           onRecipeUpdated={handleRecipeUpdated}
           onClose={() => setEditModalOpen(false)}
