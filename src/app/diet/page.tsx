@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -69,15 +69,17 @@ const mockDieta: DietaData = {
 };
 
 export default function DietPage() {
-  const [dieta, setDieta] = useState<DietaData>(mockDieta);
-  const [input, setInput] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [dieta, setDieta] = useState<DietaData>({});
+
+  useEffect(() => {
+    setDieta(mockDieta);
+  }, []);
 
   const exportToPDF = () => {
     const doc = new jsPDF();
     doc.setFont("helvetica", "normal");
     doc.setFontSize(14);
-    doc.setTextColor(255, 87, 34);
+    doc.setTextColor(255, 87, 34); // naranja
     doc.text("Tu Dieta Semanal", 14, 20);
 
     const columns = [
@@ -106,10 +108,13 @@ export default function DietPage() {
         textColor: "#333",
       },
       headStyles: {
-        fillColor: [255, 237, 213],
+        fillColor: [255, 237, 213], // bg-orange-100
         textColor: "#000",
         fontStyle: "bold",
         halign: "center",
+      },
+      bodyStyles: {
+        halign: "left",
       },
       alternateRowStyles: {
         fillColor: [255, 250, 240],
@@ -119,69 +124,11 @@ export default function DietPage() {
     doc.save("dieta.pdf");
   };
 
-  const obtenerDietaIA = async () => {
-    if (!input.trim()) return alert("Escribe algo para obtener una dieta recomendada.");
-    setLoading(true);
-    try {
-      const response = await fetch("/api/chat", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: input }),
-      });
-
-      const data = await response.json();
-
-      if (data.success && data.dieta) {
-        setDieta(data.dieta);
-      } else {
-        alert("No se pudo obtener una dieta válida.");
-      }
-    } catch (error) {
-      alert("Error al conectar con la IA.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <div className="max-w-7xl mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold text-orange-500 mb-6">Tu Dieta Semanal</h1>
 
-      <textarea
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        placeholder="Describe tu dieta actual o lo que buscas..."
-        className="w-full p-3 border rounded-lg mb-4"
-        rows={4}
-      />
-
-      <div className="flex gap-4 mb-6">
-        <button
-          onClick={obtenerDietaIA}
-          disabled={loading}
-          className="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition disabled:opacity-50"
-        >
-          {loading ? "Generando..." : "Obtener Dieta Recomendada"}
-        </button>
-
-        <button
-          onClick={() => setDieta(mockDieta)}
-          disabled={loading}
-          className="px-6 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition disabled:opacity-50"
-          title="Restaurar dieta por defecto"
-        >
-          Restaurar Dieta Inicial
-        </button>
-
-        <button
-          onClick={exportToPDF}
-          className="px-6 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition"
-        >
-          Descargar PDF
-        </button>
-      </div>
-
-      <div className="overflow-x-auto border rounded-lg shadow-md max-h-[400px]">
+      <div className="overflow-auto border rounded-lg shadow-md">
         <table className="min-w-full bg-white border-collapse">
           <thead>
             <tr className="bg-orange-100">
@@ -207,6 +154,13 @@ export default function DietPage() {
           </tbody>
         </table>
       </div>
+
+      <button
+        onClick={exportToPDF}
+        className="mt-6 px-6 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition"
+      >
+        Descargar PDF
+      </button>
     </div>
   );
 }
