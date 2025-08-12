@@ -7,7 +7,7 @@ export default function ChatWidget() {
 
   return (
     <>
-      {/* Botón flotante con color personalizado */}
+      {/* Botón flotante */}
       <button
         style={{ backgroundColor: "var(--color-orange-500)" }}
         className="fixed bottom-6 right-6 w-14 h-14 rounded-full text-white text-2xl shadow-lg hover:opacity-90 z-50 flex items-center justify-center"
@@ -17,11 +17,11 @@ export default function ChatWidget() {
         💬
       </button>
 
-      {/* Chat flotante */}
+      {/* Ventana del chat */}
       {isOpen && (
-        <div className="fixed bottom-24 right-6 w-[350px] max-h-[500px] bg-white border border-gray-300 shadow-lg rounded-lg flex flex-col z-50">
+        <div className="fixed bottom-24 right-6 w-[350px] max-h-[80vh] bg-white border border-gray-300 shadow-lg rounded-lg flex flex-col z-50 overflow-hidden">
           <div
-            className="flex justify-between items-center text-white px-4 py-2 font-semibold text-lg rounded-t-lg"
+            className="flex justify-between items-center text-white px-4 py-2 font-semibold text-lg"
             style={{ backgroundColor: "var(--color-orange-500)" }}
           >
             <span>Chatbot IA</span>
@@ -33,9 +33,7 @@ export default function ChatWidget() {
               ✖
             </button>
           </div>
-          <div className="flex-1 overflow-hidden">
-            <Chatbot />
-          </div>
+          <Chatbot />
         </div>
       )}
     </>
