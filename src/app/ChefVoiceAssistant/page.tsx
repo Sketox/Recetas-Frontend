@@ -1,15 +1,30 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { MicrophoneIcon, SpeakerWaveIcon } from "@heroicons/react/24/solid";
 
 // TypeScript: Declare SpeechRecognition for browsers
-type SpeechRecognition = typeof window.SpeechRecognition extends undefined
-  ? typeof window.webkitSpeechRecognition
-  : typeof window.SpeechRecognition;
+interface ISpeechRecognition extends EventTarget {
+  lang: string;
+  interimResults: boolean;
+  continuous: boolean;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
+  start(): void;
+  abort(): void;
+}
+
+interface SpeechRecognitionEvent extends Event {
+  results: SpeechRecognitionResultList;
+}
+
+interface SpeechRecognitionErrorEvent extends Event {
+  error: string;
+}
+
 declare global {
   interface Window {
-    SpeechRecognition: any;
-    webkitSpeechRecognition: any;
+    SpeechRecognition: new () => ISpeechRecognition;
+    webkitSpeechRecognition: new () => ISpeechRecognition;
   }
 }
 
@@ -18,44 +33,19 @@ interface ConversationItem {
   content: string;
 }
 
+interface ChefResponse {
+  response: string;
+}
+
 export default function ChefVoiceAssistant() {
   const [isListening, setIsListening] = useState(false);
   const [conversation, setConversation] = useState<ConversationItem[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
-  const recognitionRef = useRef<SpeechRecognition | null>(null);
+  const recognitionRef = useRef<ISpeechRecognition | null>(null);
   const synthesisRef = useRef<SpeechSynthesisUtterance | null>(null);
 
-  // Inicializar reconocimiento de voz
-  useEffect(() => {
-    const SpeechRecognition =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (!SpeechRecognition) {
-      console.error("Speech Recognition no soportado");
-      return;
-    }
-
-    recognitionRef.current = new SpeechRecognition();
-    recognitionRef.current.lang = "es-ES";
-    recognitionRef.current.interimResults = false;
-    recognitionRef.current.continuous = false;
-
-    recognitionRef.current.onresult = async (event) => {
-      const transcript = event.results[0][0].transcript;
-      await processUserInput(transcript);
-    };
-
-    recognitionRef.current.onerror = (event) => {
-      console.error("Error en reconocimiento:", event.error);
-      setIsListening(false);
-    };
-
-    return () => {
-      recognitionRef.current?.abort();
-    };
-  }, []);
-
   // Procesar input del usuario
-  const processUserInput = async (userMessage: string) => {
+  const processUserInput = useCallback(async (userMessage: string) => {
     setIsListening(false);
     setIsProcessing(true);
 
@@ -78,7 +68,7 @@ export default function ChefVoiceAssistant() {
 
       if (!response.ok) throw new Error("Error en la respuesta del servidor");
 
-      const data = await response.json();
+      const data: ChefResponse = await response.json();
 
       // Agregar respuesta del chef
       setConversation((prev) => [
@@ -100,7 +90,7 @@ export default function ChefVoiceAssistant() {
     } finally {
       setIsProcessing(false);
     }
-  };
+  }, []);
 
   // Convertir texto a voz
   const speakResponse = (text: string) => {
@@ -133,6 +123,35 @@ export default function ChefVoiceAssistant() {
       setIsListening(true);
     }
   };
+
+  // Inicializar reconocimiento de voz
+  useEffect(() => {
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      console.error("Speech Recognition no soportado");
+      return;
+    }
+
+    recognitionRef.current = new SpeechRecognition();
+    recognitionRef.current.lang = "es-ES";
+    recognitionRef.current.interimResults = false;
+    recognitionRef.current.continuous = false;
+
+    recognitionRef.current.onresult = async (event) => {
+      const transcript = event.results[0][0].transcript;
+      await processUserInput(transcript);
+    };
+
+    recognitionRef.current.onerror = (event) => {
+      console.error("Error en reconocimiento:", event.error);
+      setIsListening(false);
+    };
+
+    return () => {
+      recognitionRef.current?.abort();
+    };
+  }, [processUserInput]);
 
   // Cargar voces disponibles
   useEffect(() => {

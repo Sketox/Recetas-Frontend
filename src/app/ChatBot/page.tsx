@@ -4,53 +4,68 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { MicrophoneIcon, PlusIcon, Cog6ToothIcon, PaperAirplaneIcon } from '@heroicons/react/24/outline';
-import { Bars3BottomLeftIcon } from '@heroicons/react/24/solid';
+import { fetchFromBackend } from "@/services/index";
+import { ChatMessage } from '@/types/types';
+
+interface ChatApiResponse {
+  success: boolean;
+  recipes: any[];
+}
 
 export default function ChatPage() {
   const [input, setInput] = useState('');
-  const [messages, setMessages] = useState([]);
-  const messagesEndRef = useRef(null);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const handleSend = async () => {
-    if (!input.trim()) return;
+  
+const handleSend = async () => {
+  if (!input.trim()) return;
 
-    const userMessage = { id: Date.now(), text: input, role: 'user' };
-    setMessages(prev => [...prev, userMessage]);
-    setInput('');
+  const userMessage: ChatMessage = { 
+    id: Date.now().toString(), 
+    text: input, 
+    sender: 'user',
+    timestamp: new Date()
+  };
+  setMessages(prev => [...prev, userMessage]);
+  setInput('');
 
-    try {
-      const response = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ message: input }),
-      });
+  try {
+    const data = await fetchFromBackend('/ai/chat', {
+      method: 'POST',
+      body: JSON.stringify({ message: input }),
+    }) as ChatApiResponse;
 
-      const data = await response.json();
-
-      if (data.success && data.recipes) {
-        const botMessage = {
-          id: Date.now() + 1,
-          role: 'bot',
-          text: JSON.stringify(data.recipes, null, 2),
-        };
-        setMessages(prev => [...prev, botMessage]);
-      } else {
-        setMessages(prev => [...prev, {
-          id: Date.now() + 1,
-          role: 'bot',
-          text: 'Error al obtener respuesta del asistente.',
-        }]);
-      }
-    } catch (error) {
+    // Type guard for expected response shape
+    if (data && typeof data === 'object' && data.success && data.recipes) {
+      const botMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        sender: 'bot',
+        text: JSON.stringify(data.recipes, null, 2),
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, botMessage]);
+    } else {
       setMessages(prev => [...prev, {
-        id: Date.now() + 1,
-        role: 'bot',
-        text: 'Error al conectar con el servidor.',
+        id: (Date.now() + 1).toString(),
+        sender: 'bot',
+        text: 'Error al obtener respuesta del asistente.',
+        timestamp: new Date()
       }]);
     }
-  };
+
+  } catch (error) {
+    console.error('Chat error:', error);
+    setMessages(prev => [...prev, {
+      id: (Date.now() + 1).toString(),
+      sender: 'bot',
+      text: 'Error al conectar con el servidor.',
+      timestamp: new Date()
+    }]);
+  }
+
+};
+
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'auto' });
@@ -63,10 +78,10 @@ export default function ChatPage() {
         {messages.map((message) => (
           <div
             key={message.id}
-            className={`flex mb-4 ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+            className={`flex mb-4 ${message.sender === 'user' ? 'justify-end' : 'justify-start'}`}
           >
             <div className={`p-3 rounded-lg max-w-sm break-words shadow-md ${
-              message.role === 'user' ? 'bg-[#FF8C42] text-white' : 'bg-gray-200 text-black'
+              message.sender === 'user' ? 'bg-[#FF8C42] text-white' : 'bg-gray-200 text-black'
             }`}>
               <pre className="whitespace-pre-wrap text-sm">{message.text}</pre>
             </div>

@@ -1,52 +1,59 @@
+// src/lib/api.js
+import { fetchFromBackend } from "@/services";
+
+/** Pedir 3 recetas a la IA */
 export async function fetchRecipesFromAI(message) {
-  const res = await fetch("/api/ai/chat", {
+  const data = await fetchFromBackend("/ai/chat", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ message }),
   });
-
-  const data = await res.json();
-  return data.recipes;
+  return Array.isArray(data?.recipes) ? data.recipes : [];
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "/api";
-
-// Obtener todas las recetas
-export const getRecipes = async () => {
+/** Obtener todas las recetas */
+export async function getRecipes() {
   try {
-    const token = localStorage.getItem("authToken"); // donde guardaste el token
-    const response = await fetch("/api/recipes", {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    if (!response.ok) {
-      throw new Error("Error al obtener recetas");
-    }
-
-    return await response.json();
-  } catch (error) {
-    console.error("Error en getRecipes:", error);
+    const data = await fetchFromBackend("/recipes", { method: "GET" });
+    // El backend puede devolver [] o { recipes: [...] }
+    return Array.isArray(data) ? data : data?.recipes ?? [];
+  } catch (err) {
+    console.error("getRecipes error:", err);
     return [];
   }
-};
+}
 
-// Crear una receta nueva
+/** Obtener categorías con conteo calculado desde las recetas */
+export async function getCategories() {
+  const BASE = [
+    { icon: "🥐", name: "Desayuno" },
+    { icon: "🍴", name: "Almuerzo" },
+    { icon: "🍝", name: "Cena" },
+    { icon: "🍰", name: "Postre" },
+    { icon: "🍪", name: "Snack" },
+  ];
+
+  try {
+    const recipes = await getRecipes();
+    const counts = new Map();
+    for (const r of recipes) {
+      const k = r?.category;
+      if (!k) continue;
+      counts.set(k, (counts.get(k) || 0) + 1);
+    }
+    return BASE.map((b) => ({ ...b, count: counts.get(b.name) || 0 }));
+  } catch (e) {
+    console.error("getCategories error:", e);
+    return BASE.map((b) => ({ ...b, count: 0 }));
+  }
+}
+
+/** Crear receta */
 export async function createRecipe(recipe) {
-  const res = await fetch(`${API_URL}/recipes`, {
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  return fetchFromBackend("/recipes", {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
     body: JSON.stringify(recipe),
   });
-
-  if (!res.ok) {
-    throw new Error("Error al crear la receta");
-  }
-
-  return res.json();
 }

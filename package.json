@@ -11,6 +11,11 @@
   "engines": {
     "node": "20.x"
   },
+
+  "engines": {
+    "node": "22.x"
+  },
+  
   "dependencies": {
     "@heroicons/react": "^2.2.0",
     "axios": "^1.10.0",

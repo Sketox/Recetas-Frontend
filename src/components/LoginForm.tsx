@@ -1,76 +1,100 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 
-export default function LoginForm() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [errors, setErrors] = useState({ email: "", password: "" });
-  const [showPassword, setShowPassword] = useState(false);
+const ROOT = (
+  process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"
+).replace(/\/+$/, "");
+const API = `${ROOT}/api`;
 
+type LoginResponse = { token?: string; icon?: string; message?: string };
+
+const validators = {
+  email: (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),
+  password: (v: string) =>
+    v.length >= 12 && /\d/.test(v) && /[!@#$%^&*(),.?":{}|<>]/.test(v),
+} as const;
+
+type Field = keyof typeof validators;
+
+export default function LoginForm() {
   const router = useRouter();
   const { login } = useAuth();
 
-  const validate = {
-    email: (v: string) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v),
-    password: (v: string) =>
-      v.length >= 12 && /\d/.test(v) && /[!@#$%^&*(),.?":{}|<>]/.test(v),
-  };
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [errors, setErrors] = useState<{ email: string; password: string }>({
+    email: "",
+    password: "",
+  });
+  const [showPassword, setShowPassword] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [serverMsg, setServerMsg] = useState<string | null>(null);
 
-  const handleChange = (field: string, value: string) => {
-    if (field === "email") setEmail(value);
-    if (field === "password") setPassword(value);
-
+  const handleChange = (field: Field, value: string) => {
+    field === "email" ? setEmail(value) : setPassword(value);
     setErrors((prev) => ({
       ...prev,
-      [field]: value && !validate[field](value) ? "Campo inválido" : "",
+      [field]: value && !validators[field](value) ? "Campo inválido" : "",
     }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!errors.email && !errors.password && email && password) {
-      try {
-        const res = await fetch("/api/auth/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password }),
-        });
+    const emailErr = email && !validators.email(email) ? "Campo inválido" : "";
+    const passErr =
+      password && !validators.password(password) ? "Campo inválido" : "";
+    setErrors({ email: emailErr, password: passErr });
+    if (emailErr || passErr || !email || !password) return;
 
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || "Error al iniciar sesión");
+    try {
+      setSubmitting(true);
+      setServerMsg(null);
 
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("userIcon", data.icon);
-        login(data.token, data.icon);
-        router.push("/");
-      } catch (err: any) {
-        console.error("❌ Error:", err.message);
+      const res = await fetch(`${API}/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data: LoginResponse = await res.json();
+
+      if (!res.ok || !data?.token) {
+        setServerMsg(
+          data?.message ?? "Credenciales inválidas o error de servidor."
+        );
+        return;
       }
+
+      localStorage.setItem("token", data.token);
+      if (data.icon) localStorage.setItem("userIcon", data.icon);
+      login(data.token, data.icon);
+      router.push("/");
+    } catch (err) {
+      setServerMsg("Error de conexión. Intenta de nuevo.");
+    } finally {
+      setSubmitting(false);
     }
   };
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center">
-      {/* Fondo borroso */}
+    <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
       <div className="absolute inset-0 z-0">
-        {/* Imagen de fondo */}
-        <img
+        <Image
           src="/images/banner.jpg"
           alt="Fondo"
-          className="w-full h-full object-cover blur-sm"
+          fill
+          className="object-cover"
         />
-
-        {/* Degradado negro desde abajo */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/100 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-br from-black/70 via-black/50 to-orange-900/60" />
       </div>
 
-      {/* Contenido del formulario */}
       <div className="relative z-10 bg-white/80 backdrop-blur-md p-8 rounded-xl shadow-lg w-full max-w-md">
         <h2 className="text-center text-2xl font-semibold mb-2">
           ¡Bienvenido de nuevo!
@@ -117,8 +141,8 @@ export default function LoginForm() {
             />
             <button
               type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-4 top-14 transform -translate-y-1/2 text-gray-500 hover:text-gray-800 cursor-pointer"
+              onClick={() => setShowPassword((s) => !s)}
+              className="absolute right-4 top-14 -translate-y-1/2 text-gray-500 hover:text-gray-800"
             >
               {showPassword ? <FiEyeOff size={25} /> : <FiEye size={25} />}
             </button>
@@ -136,17 +160,27 @@ export default function LoginForm() {
             </Link>
           </div>
 
+          {serverMsg && (
+            <p className="text-center text-red-600 text-sm -mt-2">
+              {serverMsg}
+            </p>
+          )}
+
           <button
             type="submit"
-            className="w-full bg-orange-500 text-white font-semibold py-3 rounded hover:bg-orange-600 transform hover:scale-105 transition duration-300 ease-in-out text-lg cursor-pointer"
+            disabled={submitting}
+            className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white font-bold py-4 rounded-xl hover:from-orange-600 hover:to-amber-600 transform hover:scale-105 transition-all duration-300 text-lg shadow-lg hover:shadow-xl flex items-center justify-center gap-2 disabled:opacity-60"
           >
-            Iniciar Sesión
+            <span>{submitting ? "⏳" : "🚀"}</span>
+            {submitting ? "Ingresando..." : "Iniciar Sesión"}
           </button>
         </form>
 
-        <div className="flex items-center my-6">
+        <div className="flex items-center my-8">
           <hr className="flex-1 border-gray-300" />
-          <span className="px-3 text-gray-500 text-sm">o</span>
+          <div className="px-4 bg-gradient-to-r from-orange-400 to-amber-400 text-white text-sm font-semibold py-1 rounded-full">
+            o
+          </div>
           <hr className="flex-1 border-gray-300" />
         </div>
 

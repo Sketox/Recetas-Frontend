@@ -1,11 +1,23 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { useState } from "react";
 import { FiEye, FiEyeOff } from "react-icons/fi";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { getRandomIcon } from "@/utils/IconSelector";
+
+const ROOT = (
+  process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"
+).replace(/\/+$/, "");
+const API = `${ROOT}/api`;
+
+type RegisterResponse = {
+  token?: string;
+  icon?: string;
+  message?: string;
+};
 
 export default function RegisterForm() {
   const [formData, setFormData] = useState({
@@ -13,13 +25,13 @@ export default function RegisterForm() {
     email: "",
     password: "",
   });
-
   const [errors, setErrors] = useState({
     nombre: "",
     email: "",
     password: "",
+    general: "",
   });
-
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
   const router = useRouter();
@@ -32,75 +44,105 @@ export default function RegisterForm() {
       v.length >= 12 && /\d/.test(v) && /[!@#$%^&*(),.?":{}|<>]/.test(v),
   };
 
-  const getErrorMessage = (field: keyof typeof formData) => {
-    switch (field) {
-      case "nombre":
-        return "Debe tener al menos 3 caracteres.";
-      case "email":
-        return "Formato de correo no válido.";
-      case "password":
-        return "Debe tener 12 caracteres, un número y un símbolo.";
-      default:
-        return "Campo inválido.";
-    }
-  };
+  const getErrorMessage = (field: keyof typeof formData) =>
+    field === "nombre"
+      ? "Debe tener al menos 3 caracteres."
+      : field === "email"
+      ? "Formato de correo no válido."
+      : "Debe tener 12 caracteres, un número y un símbolo.";
 
   const handleChange = (field: keyof typeof formData, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-
+    setFormData((p) => ({ ...p, [field]: value }));
     const isValid = validate[field](value);
-    setErrors((prev) => ({
-      ...prev,
-      [field]: !isValid && value.length > 0 ? getErrorMessage(field) : "",
+    setErrors((p) => ({
+      ...p,
+      [field]: !isValid && value ? getErrorMessage(field) : "",
     }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const icon = getRandomIcon();
+    setIsSubmitting(true);
+    setErrors((p) => ({ ...p, general: "" }));
+
     const { nombre, email, password } = formData;
+    const fieldErrs = {
+      nombre:
+        nombre && !validate.nombre(nombre) ? getErrorMessage("nombre") : "",
+      email: email && !validate.email(email) ? getErrorMessage("email") : "",
+      password:
+        password && !validate.password(password)
+          ? getErrorMessage("password")
+          : "",
+    };
+    setErrors((p) => ({ ...p, ...fieldErrs }));
+    if (
+      fieldErrs.nombre ||
+      fieldErrs.email ||
+      fieldErrs.password ||
+      !nombre ||
+      !email ||
+      !password
+    ) {
+      setIsSubmitting(false);
+      return;
+    }
 
-    const isValid = Object.entries(validate).every(([field, fn]) =>
-      fn(formData[field as keyof typeof formData])
-    );
+    const icon = getRandomIcon();
 
-    if (isValid) {
-      try {
-        const res = await fetch("/api/auth/register", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ name: nombre, email, password, icon }),
-        });
+    try {
+      const res = await fetch(`${API}/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: nombre, email, password, icon }),
+      });
 
-        const data = await res.json();
-        localStorage.setItem("token", data.token);
-        localStorage.setItem("userIcon", icon);
-        login(data.token, icon);
-        router.push("/");
-      } catch (error: any) {
-        console.error("❌ Error:", error.message);
+      const data: RegisterResponse = await res.json();
+
+      if (!res.ok) {
+        setErrors((p) => ({
+          ...p,
+          general:
+            data?.message ??
+            "No se pudo crear la cuenta. Verifica los datos o inténtalo más tarde.",
+        }));
+        return;
       }
-    } else {
-      console.log("❌ Errores en el formulario");
+
+      if (!data?.token) {
+        setErrors((p) => ({
+          ...p,
+          general: "Respuesta inválida del servidor.",
+        }));
+        return;
+      }
+
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("userIcon", icon);
+      login(data.token, icon);
+      router.push("/");
+    } catch (error) {
+      setErrors((p) => ({
+        ...p,
+        general: "Error de conexión. Intenta de nuevo.",
+      }));
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="relative min-h-screen flex items-center backdrop-blur-md justify-center">
-      {/* Fondo borroso */}
+    <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
       <div className="absolute inset-0 z-0">
-        {/* Imagen de fondo */}
-        <img
+        <Image
           src="/images/banner.jpg"
           alt="Fondo"
-          className="w-full h-full object-cover blur-sm"
+          fill
+          className="w-full h-full object-cover"
         />
-
-        {/* Degradado negro desde abajo */}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/100 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-gradient-to-br from-black/70 via-black/50 to-orange-900/60" />
       </div>
 
-      {/* Contenido del formulario */}
       <div className="relative z-10 bg-white/80 backdrop-blur-md p-12 rounded-xl shadow-xl w-full max-w-lg">
         <h2 className="text-center text-2xl font-semibold mb-2">
           ¿Eres nuevo?
@@ -110,6 +152,16 @@ export default function RegisterForm() {
         </h1>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {errors.general && (
+            <div className="bg-red-50 border-l-4 border-red-400 text-red-700 px-4 py-3 rounded-lg shadow-sm">
+              <div className="flex items-center">
+                <span className="text-lg mr-2">⚠️</span>
+                <span className="font-medium">{errors.general}</span>
+              </div>
+            </div>
+          )}
+
+          {/* Nombre y Email */}
           {[
             {
               label: "Nombre completo",
@@ -131,25 +183,26 @@ export default function RegisterForm() {
               <input
                 type={type}
                 placeholder={placeholder}
-                value={formData[field as keyof typeof formData]}
+                value={formData[field as "nombre" | "email"]}
                 onChange={(e) =>
-                  handleChange(field as keyof typeof formData, e.target.value)
+                  handleChange(field as "nombre" | "email", e.target.value)
                 }
                 className={`w-full border rounded px-4 py-3 text-base focus:outline-none focus:ring-2 ${
-                  errors[field as keyof typeof errors]
+                  errors[field as "nombre" | "email"]
                     ? "border-red-500 focus:ring-red-400"
                     : "border-gray-400 focus:ring-orange-400"
                 }`}
                 required
               />
-              {errors[field as keyof typeof errors] && (
+              {errors[field as "nombre" | "email"] && (
                 <p className="text-red-500 text-sm mt-1">
-                  {errors[field as keyof typeof errors]}
+                  {errors[field as "nombre" | "email"]}
                 </p>
               )}
             </div>
           ))}
 
+          {/* Password */}
           <div className="relative">
             <label className="block text-base font-medium mb-2">
               Contraseña
@@ -168,8 +221,8 @@ export default function RegisterForm() {
             />
             <button
               type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-4 top-14 transform -translate-y-1/2 text-gray-500 hover:text-gray-800 cursor-pointer"
+              onClick={() => setShowPassword((s) => !s)}
+              className="absolute right-4 top-14 -translate-y-1/2 text-gray-500 hover:text-gray-800"
             >
               {showPassword ? <FiEyeOff size={25} /> : <FiEye size={25} />}
             </button>
@@ -180,15 +233,22 @@ export default function RegisterForm() {
 
           <button
             type="submit"
-            className="w-full bg-orange-500 text-white font-semibold py-3 rounded hover:bg-orange-600 transform hover:scale-105 transition duration-300 ease-in-out text-lg cursor-pointer"
+            disabled={isSubmitting}
+            className={`w-full font-bold py-4 rounded-xl transition-all duration-300 text-lg shadow-lg transform ${
+              isSubmitting
+                ? "bg-gray-400 cursor-not-allowed scale-95"
+                : "bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 hover:scale-105 hover:shadow-xl"
+            } text-white`}
           >
-            Continuar
+            {isSubmitting ? "Creando cuenta..." : "Continuar 🚀"}
           </button>
         </form>
 
-        <div className="flex items-center my-6">
+        <div className="flex items-center my-8">
           <hr className="flex-1 border-gray-300" />
-          <span className="px-3 text-gray-500 text-sm">o</span>
+          <div className="px-4 bg-gradient-to-r from-orange-400 to-amber-400 text-white text-sm font-semibold py-1 rounded-full">
+            o
+          </div>
           <hr className="flex-1 border-gray-300" />
         </div>
 
