@@ -1,11 +1,13 @@
-const API_BASE = (
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"
-).replace(/\/$/, "");
+// src/lib/api.js
+import { BASE_URL } from "@/services";
+
+const API_BASE = BASE_URL.replace(/\/$/, ""); // ya incluye /api
 
 async function jsonFetch(path, opts = {}) {
-  const url = `${API_BASE}${path}`;
+  const p = path.startsWith("/") ? path : `/${path}`;
+  const url = `${API_BASE}${p}`;
+
   const res = await fetch(url, {
-    // headers por defecto + ngrok
     headers: {
       "Content-Type": "application/json",
       "ngrok-skip-browser-warning": "true",
@@ -16,7 +18,7 @@ async function jsonFetch(path, opts = {}) {
   });
 
   const ct = res.headers.get("content-type") || "";
-  // Si no parece JSON, evita parsear y lanza error claro
+
   if (!ct.includes("application/json")) {
     const text = await res.text().catch(() => "");
     throw new Error(
@@ -28,7 +30,9 @@ async function jsonFetch(path, opts = {}) {
 
   if (!res.ok) {
     const err = await res.json().catch(() => ({}));
-    throw new Error(err?.error || `HTTP ${res.status} en ${url}`);
+    throw new Error(
+      err?.error || err?.message || `HTTP ${res.status} en ${url}`
+    );
   }
 
   return res.json();

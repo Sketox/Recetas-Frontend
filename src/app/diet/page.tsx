@@ -3,6 +3,7 @@
 import { useState, useMemo } from "react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
+import { fetchFromBackend, BASE_URL } from "@/services";
 
 type Meals = {
   desayuno: string;
@@ -14,9 +15,15 @@ type Meals = {
 
 type DietMap = Record<string, Meals>;
 
-const API_BASE = (
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"
-).replace(/\/$/, "");
+type DietResponse = {
+  success: boolean;
+  diet?: DietMap;
+  notes?: string;
+  error?: string;
+};
+
+// BASE_URL viene de services y ya incluye /api
+const API_BASE = BASE_URL.replace(/\/$/, "");
 
 const DAYS: Array<keyof DietMap> = [
   "Lunes",
@@ -42,30 +49,18 @@ export default function DietPage() {
 
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/ai/diet`, {
+      // usa el helper centralizado (headers + ngrok + timeouts)
+      const json = await fetchFromBackend<DietResponse>("/ai/diet", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "ngrok-skip-browser-warning": "true",
-        },
         body: JSON.stringify({ message: msg }),
-        cache: "no-store",
       });
-
-      const ct = res.headers.get("content-type") || "";
-      if (!ct.includes("application/json")) {
-        const text = await res.text();
-        throw new Error(`Respuesta no JSON (${ct}): ${text.slice(0, 120)}`);
-      }
-      const json = await res.json();
 
       if (json?.success && json?.diet) {
         setDiet(json.diet as DietMap);
         setNotes(json.notes || "");
-        // scroll arriba
         window.scrollTo({ top: 0, behavior: "smooth" });
       } else {
-        throw new Error("No se pudo obtener una dieta válida.");
+        throw new Error(json?.error || "No se pudo obtener una dieta válida.");
       }
     } catch (err: any) {
       console.error(err);
@@ -90,7 +85,6 @@ export default function DietPage() {
       doc.text(split, 40, 65);
     }
 
-    // Tabla
     const columns = [
       { header: "Día", dataKey: "dia" },
       { header: "Desayuno", dataKey: "desayuno" },
@@ -254,7 +248,7 @@ export default function DietPage() {
         })}
       </div>
 
-      {/* Botón extra de PDF al final (si ya hay plan) */}
+      {/* Botón extra de PDF al final */}
       {filledDays.length === 7 && (
         <div className="mt-8 flex justify-center">
           <button
