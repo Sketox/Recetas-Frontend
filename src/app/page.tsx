@@ -7,22 +7,19 @@ import EditorCarousel from "../components/Carousel";
 import RecipeCard from "../components/recipeCard";
 import CategoryCard from "../components/category";
 import CTA from "../components/CTA";
-import { fetchRecipesFromAI, getRecipes, getCategories } from "@/lib/api"; // ← alias
+import { getRecipes, getCategories } from "@/lib/api";
 import Modal from "../components/modal";
 import CreateRecipeForm from "../components/create_recipe_form";
-import ChatWidget from "@/components/ChatWidget";
+import Chatbot from "@/components/chatbot"; // 👈 monta el nuevo chat
 import useTokenValidation from "@/hooks/useTokenValidation";
 import { Recipe } from "@/types/recipe";
 
-// Tipo alineado con getCategories(): { name, icon, count }
 type CategorySummary = { name: string; icon: string; count: number };
 
 export default function HomePage() {
   useTokenValidation();
 
-  const [isChatOpen, setIsChatOpen] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>("");
-  const [input, setInput] = useState("");
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [categories, setCategories] = useState<CategorySummary[]>([]);
   const [loading, setLoading] = useState(true);
@@ -36,15 +33,12 @@ export default function HomePage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        console.log("🔄 Cargando recetas y categorías...");
         const [recipesData, categoriesData] = await Promise.all([
           getRecipes(),
           getCategories(),
         ]);
-        console.log("✅ Recetas cargadas:", recipesData);
-        console.log("✅ Categorías cargadas:", categoriesData);
-        setRecipes(recipesData);
-        setCategories(categoriesData);
+        setRecipes(recipesData || []);
+        setCategories(categoriesData || []);
       } catch (error) {
         console.error("❌ Error al cargar datos:", error);
         setRecipes([]);
@@ -55,25 +49,6 @@ export default function HomePage() {
     };
     fetchData();
   }, []);
-
-  const handleSend = async () => {
-    if (!input.trim()) return;
-    try {
-      console.log("🔄 Consultando IA con:", input);
-      const res = await fetchRecipesFromAI(input.trim());
-      console.log("✅ Respuesta de IA:", res);
-      setRecipes(res);
-      setInput("");
-    } catch (error) {
-      console.error("❌ Error al consultar IA:", error);
-    }
-  };
-
-  const handleViewRecipe = (index: number) => {
-    const recipe = recipes[index];
-    localStorage.setItem("selectedRecipe", JSON.stringify(recipe));
-    router.push("/recipe_detail");
-  };
 
   return (
     <div>
@@ -165,7 +140,7 @@ export default function HomePage() {
               <CategoryCard
                 icon={c.icon}
                 name={c.name}
-                count={c.count} // ← usa el contador real
+                count={c.count}
                 isActive={selectedCategory === c.name}
                 onClick={() => {
                   setSelectedCategory(c.name);
@@ -179,51 +154,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Botón flotante del chat */}
-      <ChatWidget />
-
-      {/* (Opcional) Chat flotante antiguo: se mantiene oculto si isChatOpen=false */}
-      {isChatOpen && (
-        <div className="fixed bottom-24 right-6 w-[360px] max-h-[500px] bg-white border border-gray-300 shadow-lg rounded-lg p-4 overflow-y-auto z-50">
-          <div className="flex justify-between items-center mb-2">
-            <h3 className="text-lg font-semibold">Asistente de Recetas</h3>
-            <button
-              onClick={() => setIsChatOpen(false)}
-              className="text-gray-600 hover:text-black"
-            >
-              ✖
-            </button>
-          </div>
-
-          <div className="mb-2">
-            <input
-              className="w-full border px-2 py-1 rounded mb-2"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="¿Qué quieres cocinar?"
-              onKeyDown={(e) => e.key === "Enter" && handleSend()}
-            />
-            <button
-              className="w-full bg-blue-600 text-white py-1 rounded hover:bg-blue-700"
-              onClick={handleSend}
-            >
-              Enviar
-            </button>
-          </div>
-
-          {recipes.map((r, i) => (
-            <div key={i} className="mb-4">
-              <h4 className="font-semibold">{r.title}</h4>
-              <button
-                className="text-sm text-blue-600 hover:underline"
-                onClick={() => handleViewRecipe(i)}
-              >
-                Ver receta →
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
+      {/* 👇 monta el chat (usa portal, no rompe layout) */}
+      <Chatbot />
 
       <CTA
         onOpenModal={() => setIsModalOpen(true)}

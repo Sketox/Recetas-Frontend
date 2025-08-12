@@ -32,12 +32,10 @@ export default function RecipeDetailPage() {
       if (!token) return;
 
       try {
-        const userData = await fetchFromBackend("/user/me", {
+        const userData = (await fetchFromBackend("/user/me", {
           method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }) as User;
+          headers: { Authorization: `Bearer ${token}` },
+        })) as User;
         setCurrentUser(userData);
       } catch (error) {
         console.error("Error fetching user:", error);
@@ -50,15 +48,9 @@ export default function RecipeDetailPage() {
   useEffect(() => {
     // Verificar si el usuario actual es el dueño de la receta
     if (recipe && currentUser) {
-      // Comparar tanto con _id como con id para mayor compatibilidad
-      const recipeOwnerId = recipe.userId;
+      const recipeOwnerId = (recipe as any).userId;
       const currentUserId = currentUser._id;
-      
-      console.log("🔍 Verificando propietario:");
-      console.log("Recipe userId:", recipeOwnerId);
-      console.log("Current user ID:", currentUserId);
-      
-      setIsOwner(recipeOwnerId === currentUserId);
+      setIsOwner(Boolean(recipeOwnerId && recipeOwnerId === currentUserId));
     }
   }, [recipe, currentUser]);
 
@@ -68,22 +60,18 @@ export default function RecipeDetailPage() {
   };
 
   const handleRecipeUpdated = async (updatedRecipe: Recipe) => {
-    console.log("🔄 Actualizando receta:", updatedRecipe);
-    
-    // Actualizar la receta actual
     setRecipe(updatedRecipe);
     localStorage.setItem("selectedRecipe", JSON.stringify(updatedRecipe));
-    
-    // Cerrar el modal
     setEditModalOpen(false);
     setRecipeToEdit(null);
   };
 
   const handleDeleteRecipe = async () => {
     if (!recipe) return;
-    
-    const confirmDelete = confirm("¿Estás seguro de que quieres eliminar esta receta? Esta acción no se puede deshacer.");
-    
+
+    const confirmDelete = confirm(
+      "¿Estás seguro de que quieres eliminar esta receta? Esta acción no se puede deshacer."
+    );
     if (!confirmDelete) return;
 
     const token = localStorage.getItem("token");
@@ -93,16 +81,13 @@ export default function RecipeDetailPage() {
     }
 
     try {
-      const recipeId = recipe._id || recipe.id;
+      const recipeId = (recipe as any)._id || (recipe as any).id;
       await fetchFromBackend(`/recipes/${recipeId}`, {
         method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { Authorization: `Bearer ${token}` },
       });
-
       alert("Receta eliminada exitosamente");
-      router.push("/recipes"); // Redirigir a la lista de recetas
+      router.push("/recipes");
     } catch (error) {
       console.error("Error al eliminar receta:", error);
       alert("Error al eliminar la receta. Inténtalo de nuevo.");
@@ -112,6 +97,29 @@ export default function RecipeDetailPage() {
   if (!recipe) return <p className="text-center mt-10">Cargando receta...</p>;
 
   const totalTime = (recipe.prepTime || 0) + (recipe.cookTime || 0);
+
+  // Fallbacks: acepta ingredients/ingredientes e instructions/instrucciones
+  const ingredients: string[] = Array.isArray((recipe as any).ingredients)
+    ? (recipe as any).ingredients
+    : Array.isArray((recipe as any).ingredientes)
+    ? (recipe as any).ingredientes
+    : [];
+
+  const instructions: string[] = Array.isArray((recipe as any).instructions)
+    ? (recipe as any).instructions
+    : Array.isArray((recipe as any).instrucciones)
+    ? (recipe as any).instrucciones
+    : [];
+
+  const createdAtSafe =
+    (recipe as any).createdAt &&
+    new Date((recipe as any).createdAt).toString() !== "Invalid Date"
+      ? new Date((recipe as any).createdAt).toLocaleDateString("es-ES", {
+          day: "2-digit",
+          month: "long",
+          year: "numeric",
+        })
+      : null;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50">
@@ -123,24 +131,33 @@ export default function RecipeDetailPage() {
               <h1 className="text-4xl font-bold text-gray-900 mb-4 bg-gradient-to-r from-orange-600 to-amber-600 bg-clip-text text-transparent">
                 {recipe.title}
               </h1>
-              <p className="text-lg text-gray-600 leading-relaxed">{recipe.description}</p>
-              
+              <p className="text-lg text-gray-600 leading-relaxed">
+                {recipe.description}
+              </p>
+
               {/* Información del autor */}
-              {recipe.author ? (
+              {(recipe as any).author ? (
                 <div className="flex items-center mt-4 p-3 bg-orange-50 rounded-xl border border-orange-100">
                   <div className="w-8 h-8 mr-3 text-orange-500 flex items-center justify-center">
                     👨‍🍳
                   </div>
-                  <span className="font-medium text-gray-700">Receta creada por {recipe.author.name}</span>
+                  <span className="font-medium text-gray-700">
+                    Receta creada por{" "}
+                    {(recipe as any).author?.name || (recipe as any).author}
+                  </span>
                 </div>
               ) : (
                 <div className="flex items-center mt-4 p-3 bg-gray-50 rounded-xl border border-gray-100">
-                  <div className="w-8 h-8 mr-3 text-gray-500 flex items-center justify-center">🏠</div>
-                  <span className="font-medium text-gray-700">Receta de Cooksy</span>
+                  <div className="w-8 h-8 mr-3 text-gray-500 flex items-center justify-center">
+                    🏠
+                  </div>
+                  <span className="font-medium text-gray-700">
+                    Receta de Cooksy
+                  </span>
                 </div>
               )}
             </div>
-            
+
             {isOwner && (
               <div className="flex gap-3">
                 <button
@@ -162,7 +179,7 @@ export default function RecipeDetailPage() {
           </div>
         </div>
 
-        {/* Imagen principal modernizada */}
+        {/* Imagen principal */}
         <div className="relative w-full h-80 md:h-96 rounded-2xl overflow-hidden shadow-xl mb-8">
           {recipe.imageUrl && recipe.imageUrl.trim() !== "" ? (
             <Image
@@ -174,11 +191,13 @@ export default function RecipeDetailPage() {
           ) : (
             <div className="w-full h-full bg-gradient-to-br from-orange-400 via-orange-500 to-amber-600 flex flex-col items-center justify-center text-white">
               <div className="text-8xl mb-6">🍽️</div>
-              <h2 className="text-3xl font-bold text-center px-4">{recipe.title}</h2>
+              <h2 className="text-3xl font-bold text-center px-4">
+                {recipe.title}
+              </h2>
             </div>
           )}
-          
-          {/* Overlay con información rápida */}
+
+          {/* Overlay info rápida */}
           <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-6">
             <div className="flex items-center justify-between text-white">
               <div className="flex items-center gap-4">
@@ -197,40 +216,48 @@ export default function RecipeDetailPage() {
           </div>
         </div>
 
-        {/* Estadísticas modernizadas */}
+        {/* Stats */}
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-4 mb-8">
           <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 text-center transform hover:scale-105 transition-all duration-200">
             <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-3">
               <span className="text-2xl">⏱</span>
             </div>
             <p className="text-sm text-gray-500 mb-1">Preparación</p>
-            <p className="text-xl font-bold text-gray-900">{recipe.prepTime} min</p>
+            <p className="text-xl font-bold text-gray-900">
+              {recipe.prepTime} min
+            </p>
           </div>
-          
+
           <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 text-center transform hover:scale-105 transition-all duration-200">
             <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-3">
               <span className="text-2xl">🔥</span>
             </div>
             <p className="text-sm text-gray-500 mb-1">Cocción</p>
-            <p className="text-xl font-bold text-gray-900">{recipe.cookTime} min</p>
+            <p className="text-xl font-bold text-gray-900">
+              {recipe.cookTime} min
+            </p>
           </div>
-          
+
           <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 text-center transform hover:scale-105 transition-all duration-200">
             <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
               <span className="text-2xl">👥</span>
             </div>
             <p className="text-sm text-gray-500 mb-1">Porciones</p>
-            <p className="text-xl font-bold text-gray-900">{recipe.servings}</p>
+            <p className="text-xl font-bold text-gray-900">
+              {(recipe as any).servings}
+            </p>
           </div>
-          
+
           <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 text-center transform hover:scale-105 transition-all duration-200">
             <div className="w-12 h-12 bg-pink-100 rounded-full flex items-center justify-center mx-auto mb-3">
               <span className="text-2xl">📈</span>
             </div>
             <p className="text-sm text-gray-500 mb-1">Dificultad</p>
-            <p className="text-xl font-bold text-gray-900">{recipe.difficulty}</p>
+            <p className="text-xl font-bold text-gray-900">
+              {recipe.difficulty}
+            </p>
           </div>
-          
+
           <div className="bg-white rounded-xl p-6 shadow-lg border border-gray-100 text-center transform hover:scale-105 transition-all duration-200">
             <div className="w-12 h-12 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-3">
               <span className="text-2xl">⭐</span>
@@ -240,24 +267,22 @@ export default function RecipeDetailPage() {
           </div>
         </div>
 
-        {/* Información adicional modernizada */}
+        {/* Info extra */}
         <div className="flex flex-wrap items-center gap-4 mb-8">
           <span className="bg-gradient-to-r from-blue-500 to-blue-600 text-white px-4 py-2 rounded-full text-sm font-semibold shadow-lg">
             {recipe.category}
           </span>
-          <div className="flex items-center gap-2 text-gray-500">
-            <span className="text-lg">📅</span>
-            <span className="text-sm font-medium">
-              Creado el {new Date(recipe.createdAt).toLocaleDateString("es-ES", {
-                day: "2-digit",
-                month: "long",
-                year: "numeric",
-              })}
-            </span>
-          </div>
+          {createdAtSafe && (
+            <div className="flex items-center gap-2 text-gray-500">
+              <span className="text-lg">📅</span>
+              <span className="text-sm font-medium">
+                Creado el {createdAtSafe}
+              </span>
+            </div>
+          )}
         </div>
 
-        {/* Ingredientes e instrucciones modernizadas */}
+        {/* Ingredientes e instrucciones */}
         <div className="grid lg:grid-cols-2 gap-8">
           {/* Ingredientes */}
           <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
@@ -267,16 +292,22 @@ export default function RecipeDetailPage() {
               </div>
               <h3 className="text-2xl font-bold text-gray-900">Ingredientes</h3>
             </div>
-            
+
             <div className="space-y-3">
-              {recipe.ingredients.map((item, index) => (
-                <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors duration-200">
+              {ingredients.map((item, index) => (
+                <div
+                  key={index}
+                  className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors duration-200"
+                >
                   <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
                     <span className="text-white text-sm">✓</span>
                   </div>
                   <span className="text-gray-700 font-medium">{item}</span>
                 </div>
               ))}
+              {ingredients.length === 0 && (
+                <p className="text-gray-500">No se listaron ingredientes.</p>
+              )}
             </div>
           </div>
 
@@ -286,11 +317,13 @@ export default function RecipeDetailPage() {
               <div className="w-10 h-10 bg-orange-100 rounded-full flex items-center justify-center">
                 <span className="text-xl">👨‍🍳</span>
               </div>
-              <h3 className="text-2xl font-bold text-gray-900">Instrucciones</h3>
+              <h3 className="text-2xl font-bold text-gray-900">
+                Instrucciones
+              </h3>
             </div>
-            
+
             <div className="space-y-4">
-              {recipe.instructions.map((step, index) => (
+              {instructions.map((step, index) => (
                 <div key={index} className="flex gap-4">
                   <div className="w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center flex-shrink-0 font-bold">
                     {index + 1}
@@ -298,6 +331,9 @@ export default function RecipeDetailPage() {
                   <p className="text-gray-700 leading-relaxed pt-1">{step}</p>
                 </div>
               ))}
+              {instructions.length === 0 && (
+                <p className="text-gray-500">No se listaron instrucciones.</p>
+              )}
             </div>
           </div>
         </div>
@@ -305,7 +341,7 @@ export default function RecipeDetailPage() {
 
       {/* Modal para editar receta */}
       <Modal isOpen={editModalOpen} onClose={() => setEditModalOpen(false)}>
-        <EditRecipeForm 
+        <EditRecipeForm
           recipe={recipeToEdit}
           onRecipeUpdated={handleRecipeUpdated}
           onClose={() => setEditModalOpen(false)}

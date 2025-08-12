@@ -1,59 +1,80 @@
-// src/lib/api.js
-import { fetchFromBackend } from "@/services";
+const API_BASE = (
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000/api"
+).replace(/\/$/, "");
 
-/** Pedir 3 recetas a la IA */
+async function jsonFetch(path, opts = {}) {
+  const url = `${API_BASE}${path}`;
+  const res = await fetch(url, {
+    // headers por defecto + ngrok
+    headers: {
+      "Content-Type": "application/json",
+      "ngrok-skip-browser-warning": "true",
+      ...(opts.headers || {}),
+    },
+    cache: "no-store",
+    ...opts,
+  });
+
+  const ct = res.headers.get("content-type") || "";
+  // Si no parece JSON, evita parsear y lanza error claro
+  if (!ct.includes("application/json")) {
+    const text = await res.text().catch(() => "");
+    throw new Error(
+      `Expected JSON from ${url} pero llegó ${ct || "desconocido"} (status ${
+        res.status
+      }). ` + `Primeros bytes: ${text.slice(0, 120)}`
+    );
+  }
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err?.error || `HTTP ${res.status} en ${url}`);
+  }
+
+  return res.json();
+}
+
 export async function fetchRecipesFromAI(message) {
-  const data = await fetchFromBackend("/ai/chat", {
-    method: "POST",
-    body: JSON.stringify({ message }),
-  });
-  return Array.isArray(data?.recipes) ? data.recipes : [];
+  const controller = new AbortController();
+  const t = setTimeout(() => controller.abort(), 90_000);
+  try {
+    const json = await jsonFetch("/ai/chat", {
+      method: "POST",
+      body: JSON.stringify({ message }),
+      signal: controller.signal,
+    });
+    return Array.isArray(json?.recipes) ? json.recipes : [];
+  } finally {
+    clearTimeout(t);
+  }
 }
 
-/** Obtener todas las recetas */
 export async function getRecipes() {
-  try {
-    const data = await fetchFromBackend("/recipes", { method: "GET" });
-    // El backend puede devolver [] o { recipes: [...] }
-    return Array.isArray(data) ? data : data?.recipes ?? [];
-  } catch (err) {
-    console.error("getRecipes error:", err);
-    return [];
-  }
+  return jsonFetch("/recipes");
 }
 
-/** Obtener categorías con conteo calculado desde las recetas */
 export async function getCategories() {
-  const BASE = [
-    { icon: "🥐", name: "Desayuno" },
-    { icon: "🍴", name: "Almuerzo" },
-    { icon: "🍝", name: "Cena" },
-    { icon: "🍰", name: "Postre" },
-    { icon: "🍪", name: "Snack" },
-  ];
-
+  // 1) endpoint dedicado si existe
   try {
-    const recipes = await getRecipes();
-    const counts = new Map();
-    for (const r of recipes) {
-      const k = r?.category;
-      if (!k) continue;
-      counts.set(k, (counts.get(k) || 0) + 1);
-    }
-    return BASE.map((b) => ({ ...b, count: counts.get(b.name) || 0 }));
-  } catch (e) {
-    console.error("getCategories error:", e);
-    return BASE.map((b) => ({ ...b, count: 0 }));
-  }
-}
-
-/** Crear receta */
-export async function createRecipe(recipe) {
-  const token =
-    typeof window !== "undefined" ? localStorage.getItem("token") : null;
-  return fetchFromBackend("/recipes", {
-    method: "POST",
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-    body: JSON.stringify(recipe),
+    return await jsonFetch("/recipes/categories");
+  } catch (_) {}
+  // 2) fallback desde recetas
+  const list = await getRecipes();
+  const map = new Map();
+  const icon = (name = "") => {
+    const n = name.toLowerCase();
+    if (n === "desayuno") return "🍳";
+    if (n === "almuerzo") return "🍽️";
+    if (n === "cena") return "🌙";
+    if (n === "postre") return "🍰";
+    if (n === "snack") return "🥨";
+    return "🍲";
+  };
+  (list || []).forEach((r) => {
+    const name = r?.category || "Otros";
+    const curr = map.get(name) || { name, icon: icon(name), count: 0 };
+    curr.count += 1;
+    map.set(name, curr);
   });
+  return Array.from(map.values());
 }
