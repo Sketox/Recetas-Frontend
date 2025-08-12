@@ -1,6 +1,7 @@
 // src/services/index.ts
 const ROOT = (
-  process.env.NEXT_PUBLIC_BACKEND_URL || "http://localhost:5000"
+  process.env.NEXT_PUBLIC_BACKEND_URL ||
+  "https://current-ant-touching.ngrok-free.app"
 ).replace(/\/+$/, "");
 const BASE_URL = `${ROOT}/api`;
 
@@ -15,20 +16,33 @@ export async function fetchFromBackend<T>(
     console.log("🌐 Haciendo petición a:", url);
     console.log("📤 Opciones de la petición:", options);
 
-    const headers = new Headers();
-    if (options.headers) {
-      new Headers(options.headers).forEach((v, k) => headers.set(k, v));
+    const headers = new Headers(options.headers || {});
+
+    // 👇 Solo para ngrok: enviar el header que salta el warning HTML
+    try {
+      const u = new URL(url);
+      if (/\bngrok(-free)?\.app$/i.test(u.hostname)) {
+        headers.set("ngrok-skip-browser-warning", "true");
+      }
+    } catch {
+      // ignore
     }
-    if (!(options.body instanceof FormData) && !headers.has("Content-Type")) {
+
+    // Content-Type solo si hay body y no es FormData
+    if (
+      options.body &&
+      !(options.body instanceof FormData) &&
+      !headers.has("Content-Type")
+    ) {
       headers.set("Content-Type", "application/json");
     }
     if (options.body instanceof FormData && headers.has("Content-Type")) {
       headers.delete("Content-Type");
     }
+
     console.log("📋 Headers finales:", Array.from(headers.entries()));
 
     const response = await fetch(url, { ...options, headers });
-
     console.log("📥 Respuesta recibida:", response.status, response.statusText);
 
     if (!response.ok) {
@@ -41,6 +55,7 @@ export async function fetchFromBackend<T>(
         };
       }
       console.error("❌ Error en la respuesta:", errorData);
+
       if (response.status === 401 && typeof window !== "undefined") {
         localStorage.removeItem("token");
         localStorage.removeItem("userIcon");
@@ -48,6 +63,18 @@ export async function fetchFromBackend<T>(
       throw new Error(
         errorData.message || errorData.error || "Error en la solicitud"
       );
+    }
+
+    const ct = response.headers.get("content-type") || "";
+    if (!ct.includes("application/json")) {
+      const text = await response.text();
+      console.error(
+        "⚠️ Esperaba JSON pero recibí:",
+        ct,
+        "→",
+        text.slice(0, 300)
+      );
+      throw new Error(`El backend respondió ${ct}. ¿La URL es correcta?`);
     }
 
     const result = await response.json();

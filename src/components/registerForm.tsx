@@ -8,8 +8,10 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { getRandomIcon } from "@/utils/IconSelector";
 
+// 👇 Usa SIEMPRE la URL base SIN /api; abajo le añadimos /api
 const ROOT = (
-  process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"
+  process.env.NEXT_PUBLIC_BACKEND_URL ||
+  "https://current-ant-touching.ngrok-free.app"
 ).replace(/\/+$/, "");
 const API = `${ROOT}/api`;
 
@@ -117,9 +119,11 @@ export default function RegisterForm() {
         return;
       }
 
+      // Guardar sesión
       localStorage.setItem("token", data.token);
       localStorage.setItem("userIcon", icon);
       login(data.token, icon);
+
       router.push("/");
     } catch (error) {
       setErrors((p) => ({
@@ -139,6 +143,7 @@ export default function RegisterForm() {
           alt="Fondo"
           fill
           className="w-full h-full object-cover"
+          priority
         />
         <div className="absolute inset-0 bg-gradient-to-br from-black/70 via-black/50 to-orange-900/60" />
       </div>

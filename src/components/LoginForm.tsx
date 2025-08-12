@@ -7,8 +7,10 @@ import { FiEye, FiEyeOff } from "react-icons/fi";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 
+// 👇 Usa la URL base SIN /api; abajo le añadimos /api
 const ROOT = (
-  process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:5000"
+  process.env.NEXT_PUBLIC_BACKEND_URL ||
+  "https://current-ant-touching.ngrok-free.app"
 ).replace(/\/+$/, "");
 const API = `${ROOT}/api`;
 
@@ -40,16 +42,24 @@ export default function LoginForm() {
     field === "email" ? setEmail(value) : setPassword(value);
     setErrors((prev) => ({
       ...prev,
-      [field]: value && !validators[field](value) ? "Campo inválido" : "",
+      [field]:
+        value && !validators[field](value)
+          ? field === "email"
+            ? "Formato de correo no válido."
+            : "Debe tener 12 caracteres, un número y un símbolo."
+          : "",
     }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const emailErr = email && !validators.email(email) ? "Campo inválido" : "";
+    const emailErr =
+      email && !validators.email(email) ? "Formato de correo no válido." : "";
     const passErr =
-      password && !validators.password(password) ? "Campo inválido" : "";
+      password && !validators.password(password)
+        ? "Debe tener 12 caracteres, un número y un símbolo."
+        : "";
     setErrors({ email: emailErr, password: passErr });
     if (emailErr || passErr || !email || !password) return;
 
@@ -72,11 +82,13 @@ export default function LoginForm() {
         return;
       }
 
+      // Guardar sesión
       localStorage.setItem("token", data.token);
       if (data.icon) localStorage.setItem("userIcon", data.icon);
+
       login(data.token, data.icon);
       router.push("/");
-    } catch (err) {
+    } catch {
       setServerMsg("Error de conexión. Intenta de nuevo.");
     } finally {
       setSubmitting(false);
@@ -91,6 +103,7 @@ export default function LoginForm() {
           alt="Fondo"
           fill
           className="object-cover"
+          priority
         />
         <div className="absolute inset-0 bg-gradient-to-br from-black/70 via-black/50 to-orange-900/60" />
       </div>
