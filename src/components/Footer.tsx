@@ -29,15 +29,7 @@ export default function Footer() {
                   Todas las recetas
                 </Link>
               </li>
-              <li>
-                <Link 
-                  href="/share" 
-                  className="hover:text-orange-400 transition-all duration-200 flex items-center group"
-                >
-                  <span className="w-1.5 h-1.5 bg-orange-400 rounded-full mr-3 group-hover:scale-150 transition-transform"></span>
-                  Comparte tus ingredientes
-                </Link>
-              </li>
+            
             </ul>
           </div>
 
@@ -50,7 +42,7 @@ export default function Footer() {
             <ul className="space-y-3 text-gray-300">
               <li>
                 <Link 
-                  href="/recipes?cat=desayunos" 
+                  href="/recipes?category=Desayuno" 
                   className="hover:text-orange-400 transition-all duration-200 flex items-center group"
                 >
                   <span className="text-lg mr-2">🥐</span>
@@ -59,16 +51,25 @@ export default function Footer() {
               </li>
               <li>
                 <Link 
-                  href="/recipes?cat=platos-fuertes" 
+                  href="/recipes?category=Almuerzo" 
                   className="hover:text-orange-400 transition-all duration-200 flex items-center group"
                 >
                   <span className="text-lg mr-2">🍽️</span>
-                  Platos fuertes
+                  Almuerzos
                 </Link>
               </li>
               <li>
                 <Link 
-                  href="/recipes?cat=postres" 
+                  href="/recipes?category=Cena" 
+                  className="hover:text-orange-400 transition-all duration-200 flex items-center group"
+                >
+                  <span className="text-lg mr-2">☕</span>
+                  Cenas
+                </Link>
+              </li>
+              <li>
+                <Link 
+                  href="/recipes?category=Postre" 
                   className="hover:text-orange-400 transition-all duration-200 flex items-center group"
                 >
                   <span className="text-lg mr-2">🍰</span>
@@ -77,11 +78,11 @@ export default function Footer() {
               </li>
               <li>
                 <Link 
-                  href="/recipes?cat=especiales" 
+                  href="/recipes?category=Snack" 
                   className="hover:text-orange-400 transition-all duration-200 flex items-center group"
                 >
                   <span className="text-lg mr-2">⭐</span>
-                  Especiales
+                  Snacks
                 </Link>
               </li>
             </ul>
@@ -152,5 +153,6 @@ export default function Footer() {
         </div>
       </div>
     </footer>
+    
   );
 }
