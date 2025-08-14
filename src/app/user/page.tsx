@@ -11,6 +11,7 @@ import Modal from "@/components/modal";
 import EditRecipeForm from "@/components/edit_recipe_form";
 import RecipeCard from "@/components/recipeCard";
 import { fetchFromBackend } from "@/services/index";
+import CreateRecipeForm from "@/components/create_recipe_form";
 import useTokenValidation from "@/hooks/useTokenValidation";
 import { useFavorites } from "@/hooks/useFavorites";
 import { getBackgroundColor } from "@/utils/colorUtils";
@@ -32,6 +33,8 @@ export default function ProfilePage() {
   const [createdRecipes, setCreatedRecipes] = useState<Recipe[]>([]);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [recipeToEdit, setRecipeToEdit] = useState<Recipe | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [showAuthPrompt, setShowAuthPrompt] = useState(false);
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [tempUserData, setTempUserData] = useState({ name: "", email: "" });
   const [isSavingIcon, setIsSavingIcon] = useState(false);
@@ -529,16 +532,59 @@ export default function ProfilePage() {
                 ¡Comparte tus recetas favoritas con la comunidad!
               </p>
               <button
-                onClick={() => router.push("/recipes")}
+                onClick={() => {
+                  const token = localStorage.getItem("token");
+                  if (token) {
+                    setIsModalOpen(true);
+                  } else {
+                    setShowAuthPrompt(true);
+                  }
+                }}
                 className="px-6 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors"
               >
                 Crear mi primera receta
               </button>
+      {showAuthPrompt && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/10 backdrop-blur-sm">
+          <div className="bg-white p-6 rounded-lg shadow-lg text-center max-w-sm relative">
+            <button
+              onClick={() => setShowAuthPrompt(false)}
+              className="absolute top-2 right-2 text-gray-500 hover:text-black text-2xl font-bold"
+            >
+              ✖
+            </button>
+            <h3 className="text-xl font-bold mb-4 text-gray-800">
+              Inicia sesión para compartir recetas
+            </h3>
+            <p className="text-gray-600 mb-6">
+              Debes estar registrado para poder subir tus recetas.
+            </p>
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={() => router.push("/login")}
+                className="px-4 py-2 bg-orange-500 text-white rounded hover:bg-orange-600 transition"
+              >
+                Iniciar Sesión
+              </button>
+              <button
+                onClick={() => router.push("/register")}
+                className="px-4 py-2 border border-orange-500 text-orange-500 rounded hover:bg-orange-100 transition"
+              >
+                Registrarse
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      
             </div>
           )}
         </div>
       </div>
-
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+        <CreateRecipeForm onRecipeUploaded={() => setIsModalOpen(false)} />
+      </Modal>
       {/* Modal editar receta */}
       <Modal isOpen={editModalOpen} onClose={() => setEditModalOpen(false)}>
         <EditRecipeForm
