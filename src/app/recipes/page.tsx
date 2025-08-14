@@ -17,6 +17,10 @@ export default function RecipesPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedDifficulty, setSelectedDifficulty] = useState("");
+  
+  // Paginación
+  const [currentPage, setCurrentPage] = useState(1);
+  const recipesPerPage = 8;
 
   // Lee categoría desde la URL (e.g. /recipes?category=Postre)
   useEffect(() => {
@@ -69,6 +73,8 @@ export default function RecipesPage() {
     }
 
     setFiltered(list);
+    // Reset a la primera página cuando cambian los filtros
+    setCurrentPage(1);
   }, [recipes, searchTerm, selectedCategory, selectedDifficulty]);
 
   const handleViewRecipe = (recipe: Recipe) => {
@@ -92,12 +98,22 @@ export default function RecipesPage() {
         {/* Filtros */}
         <div className="bg-white rounded-2xl shadow-md p-6 mb-8 border border-gray-100">
           <div className="flex flex-col gap-4 md:flex-row md:items-center">
-            <input
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Buscar por título…"
-              className="flex-1 border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-400"
-            />
+            <div className="relative flex-1">
+              <input
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Buscar por título…"
+                className="w-full border rounded-xl px-4 py-3 focus:outline-none focus:ring-2 focus:ring-orange-400"
+              />
+              {searchTerm && (
+                <button 
+                  onClick={() => setSearchTerm("")}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
 
             <select
               value={selectedCategory}
@@ -122,6 +138,19 @@ export default function RecipesPage() {
               <option value="Intermedio">Intermedio</option>
               <option value="Difícil">Difícil</option>
             </select>
+
+            {(searchTerm || selectedCategory || selectedDifficulty) && (
+              <button
+                onClick={() => {
+                  setSearchTerm("");
+                  setSelectedCategory("");
+                  setSelectedDifficulty("");
+                }}
+                className="md:ml-2 px-4 py-2 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all duration-200 text-sm font-medium flex items-center justify-center"
+              >
+                Limpiar filtros
+              </button>
+            )}
           </div>
         </div>
 
@@ -144,26 +173,162 @@ export default function RecipesPage() {
             ))}
           </div>
         ) : filtered.length > 0 ? (
-          <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-            {filtered.map((r, i) => (
-              <div
-                key={r._id || r.id || i}
-                className="transform hover:scale-[1.01] transition"
-              >
-                <RecipeCard
-                  recipeId={r._id || r.id}
-                  title={r.title}
-                  description={r.description}
-                  imageUrl={r.imageUrl}
-                  time={(r.prepTime || 0) + (r.cookTime || 0)}
-                  difficulty={r.difficulty}
-                  rating={r.rating}
-                  author={r.author}
-                  onViewRecipe={() => handleViewRecipe(r)}
-                />
+          <>
+            {/* Información de resultados */}
+            <div className="flex justify-between items-center mb-6">
+              <p className="text-sm text-gray-600">
+                Mostrando {Math.min(((currentPage - 1) * recipesPerPage) + 1, filtered.length)} - {Math.min(currentPage * recipesPerPage, filtered.length)} de {filtered.length} recetas
+                {(searchTerm || selectedCategory || selectedDifficulty) && (
+                  <span className="ml-1">
+                    ({filtered.length === recipes.length ? 'sin filtros' : 'filtradas'})
+                  </span>
+                )}
+              </p>
+            </div>
+            
+            {/* Grid de recetas */}
+            <div className={`grid gap-8 ${
+              filtered.length <= 2 ? 'sm:grid-cols-1 md:grid-cols-2' : 
+              filtered.length <= 3 ? 'sm:grid-cols-2 md:grid-cols-3' :
+              'sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4'
+            }`}>
+              {filtered
+                .slice((currentPage - 1) * recipesPerPage, currentPage * recipesPerPage)
+                .map((r, i) => (
+                <div
+                  key={r._id || r.id || i}
+                  className="transform hover:scale-[1.01] transition mx-auto w-full max-w-sm"
+                >
+                  <RecipeCard
+                    recipeId={r._id || r.id}
+                    title={r.title}
+                    description={r.description}
+                    imageUrl={r.imageUrl}
+                    time={(r.prepTime || 0) + (r.cookTime || 0)}
+                    difficulty={r.difficulty}
+                    rating={r.rating}
+                    author={r.author}
+                    onViewRecipe={() => handleViewRecipe(r)}
+                  />
+                </div>
+              ))}
+            </div>
+            
+            {/* Paginación */}
+            {filtered.length > recipesPerPage && (
+              <div className="mt-12 flex flex-col items-center">
+                <p className="text-sm text-gray-600 mb-4">
+                  Página {currentPage} de {Math.ceil(filtered.length / recipesPerPage)}
+                </p>
+                <div className="inline-flex rounded-md shadow-sm overflow-x-auto max-w-full pb-2">
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                    className={`px-4 py-2 text-sm font-medium rounded-l-lg border border-gray-200 
+                    ${currentPage === 1 
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                      : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                  >
+                    Anterior
+                  </button>
+                  
+                  {/* Números de página - optimizado para mostrar solo algunas páginas */}
+                  {(() => {
+                    const totalPages = Math.ceil(filtered.length / recipesPerPage);
+                    // Si hay menos de 8 páginas, mostrar todas
+                    if (totalPages <= 7) {
+                      return Array.from({ length: totalPages }).map((_, i) => (
+                        <button
+                          key={i}
+                          onClick={() => setCurrentPage(i + 1)}
+                          className={`px-4 py-2 text-sm font-medium border border-gray-200
+                          ${currentPage === i + 1
+                            ? 'bg-blue-500 text-white' 
+                            : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                        >
+                          {i + 1}
+                        </button>
+                      ));
+                    } else {
+                      // Mostrar primera, última y algunas páginas alrededor de la actual
+                      const pages = [];
+                      // Primera página
+                      pages.push(
+                        <button
+                          key={1}
+                          onClick={() => setCurrentPage(1)}
+                          className={`px-4 py-2 text-sm font-medium border border-gray-200
+                          ${currentPage === 1
+                            ? 'bg-blue-500 text-white' 
+                            : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                        >
+                          1
+                        </button>
+                      );
+                      
+                      // Páginas intermedias
+                      let startPage = Math.max(2, currentPage - 1);
+                      let endPage = Math.min(totalPages - 1, currentPage + 1);
+                      
+                      if (currentPage > 3) {
+                        pages.push(
+                          <span key="start-ellipsis" className="px-3 py-2 border border-gray-200">...</span>
+                        );
+                      }
+                      
+                      for (let i = startPage; i <= endPage; i++) {
+                        pages.push(
+                          <button
+                            key={i}
+                            onClick={() => setCurrentPage(i)}
+                            className={`px-4 py-2 text-sm font-medium border border-gray-200
+                            ${currentPage === i
+                              ? 'bg-blue-500 text-white' 
+                              : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                          >
+                            {i}
+                          </button>
+                        );
+                      }
+                      
+                      if (currentPage < totalPages - 2) {
+                        pages.push(
+                          <span key="end-ellipsis" className="px-3 py-2 border border-gray-200">...</span>
+                        );
+                      }
+                      
+                      // Última página
+                      pages.push(
+                        <button
+                          key={totalPages}
+                          onClick={() => setCurrentPage(totalPages)}
+                          className={`px-4 py-2 text-sm font-medium border border-gray-200
+                          ${currentPage === totalPages
+                            ? 'bg-blue-500 text-white' 
+                            : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                        >
+                          {totalPages}
+                        </button>
+                      );
+                      
+                      return pages;
+                    }
+                  })()}
+                  
+                  <button
+                    onClick={() => setCurrentPage(prev => Math.min(Math.ceil(filtered.length / recipesPerPage), prev + 1))}
+                    disabled={currentPage >= Math.ceil(filtered.length / recipesPerPage)}
+                    className={`px-4 py-2 text-sm font-medium rounded-r-lg border border-gray-200
+                    ${currentPage >= Math.ceil(filtered.length / recipesPerPage)
+                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
+                      : 'bg-white text-gray-700 hover:bg-gray-50'}`}
+                  >
+                    Siguiente
+                  </button>
+                </div>
               </div>
-            ))}
-          </div>
+            )}
+          </>
         ) : (
           <div className="text-center py-20">
             <div className="w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-6">

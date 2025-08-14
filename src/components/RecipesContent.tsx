@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Recipe } from "types/recipe";
 import RecipeCard from "@/components/recipeCard";
@@ -12,6 +12,8 @@ export default function RecipesContent() {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [selectedDifficulty, setSelectedDifficulty] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const recipesPerPage = 12;
 
   const searchParams = useSearchParams();
   const router = useRouter();

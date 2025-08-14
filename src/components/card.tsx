@@ -11,8 +11,14 @@ interface CardProps {
 const Card = ({ title, description, imageUrl }: CardProps) => {
   return (
     <div className="bg-white rounded-lg shadow-2xl overflow-hidden">
-      <div className="relative h-48 w-full">
-        <Image src={imageUrl} alt={title} layout="fill" objectFit="cover" />
+      <div className="relative h-48 w-full overflow-hidden flex items-center justify-center">
+        <Image 
+          src={imageUrl} 
+          alt={title} 
+          fill 
+          className="object-cover object-center"
+          style={{ objectPosition: 'center center' }} 
+        />
       </div>
       <div className="p-4">
         <h2 className="text-lg font-semibold text-gray-800">{title}</h2>

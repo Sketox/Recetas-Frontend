@@ -9,16 +9,12 @@
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx"
   },
   "engines": {
-    "node": "20.x"
-  },
-
-  "engines": {
     "node": "22.x"
   },
-  
   "dependencies": {
     "@heroicons/react": "^2.2.0",
     "axios": "^1.10.0",
+    "class-variance-authority": "^0.7.1",
     "jspdf": "^3.0.1",
     "jspdf-autotable": "^5.0.2",
     "lucide-react": "^0.525.0",
